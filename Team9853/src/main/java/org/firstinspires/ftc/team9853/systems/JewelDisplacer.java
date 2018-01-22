@@ -1,11 +1,9 @@
 package org.firstinspires.ftc.team9853.systems;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.chathamrobotics.common.RGBAColor;
 import org.chathamrobotics.common.hardware.modernrobotics.ModernRoboticsLimitSwitch;
 import org.chathamrobotics.common.hardware.utils.HardwareListener;
 import org.chathamrobotics.common.robot.Robot;
@@ -17,13 +15,16 @@ import java.util.Timer;
 
 @SuppressWarnings({"WeakerAccess", "unused", "SameParameterValue"})
 public class JewelDisplacer {
-    public static final double ARM_UP_POSITION = 0;
-    public static final double ARM_DOWN_POSITION = 0.65;
+    public static final double RIGHT_ARM_UP_POSITION = 0;
+    public static final double RIGHT_ARM_DOWN_POSITION = 0.75;
+    public static final double LEFT_ARM_UP_POSITION = 1.0;
+    public static final double LEFT_ARM_DOWN_POSITION = 0.25;
     public static final long TIME_SHIFT_LEFT = 1000;
     public static final long TIME_SHIFT_RIGHT = 1000;
     private static final Timer timer = new Timer();
 
-    private final Servo jewelArmServo;
+    private final Servo jewelArmRight;
+    private final Servo jewelArmLeft;
     private final RackAndPinion rackAndPinion;
     private final ModernRoboticsI2cColorSensor jewelColorSensor;
     private final RobotLogger logger;
@@ -32,7 +33,7 @@ public class JewelDisplacer {
 
     /**
      * Builds a new JewelDisplacer using the standard hardware names.
-     * jewelArmServo -> "JewelArm"
+     * jewelArmRight -> "JewelArm"
      * armShifterServo -> "ArmShifter"
      * jewelColorSensor -> "JewelSensor"
      * @param robot     the robot to get the logger and hardware from
@@ -40,7 +41,7 @@ public class JewelDisplacer {
      */
     /**
      * Builds a new JewelDisplacer using the standard hardware names.
-     * jewelArmServo -> "JewelArm"
+     * jewelArmRight -> "JewelArm"
      * armShifterServo -> "ArmShifter"
      * jewelColorSensor -> "JewelColor"
      * @param robot     the robot to get the logger and hardware from
@@ -52,7 +53,7 @@ public class JewelDisplacer {
 
     /**
      * Builds a new JewelDisplacer using the standard hardware names.
-     * jewelArmServo -> "JewelArm"
+     * jewelArmRight -> "JewelArm"
      * armShifterServo -> "ArmShifter"
      * jewelColorSensor -> "JewelColor"
      * @param hardwareMap   the robot's hardware map
@@ -61,7 +62,8 @@ public class JewelDisplacer {
      */
     public static JewelDisplacer build(HardwareMap hardwareMap, HardwareListener hardwareListener, RobotLogger logger) {
         return new JewelDisplacer(
-                hardwareMap.servo.get("JewelArm"),
+                hardwareMap.servo.get("JewelArmRight"),
+                hardwareMap.servo.get("JewelArmLeft"),
                 new RackAndPinion(
                         hardwareMap.crservo.get("JewelArmShifter"),
                         new ModernRoboticsLimitSwitch(hardwareMap.digitalChannel.get("UpperLimit")),
@@ -76,13 +78,14 @@ public class JewelDisplacer {
 
     /**
      * Creates a new instance of JewelDisplacer
-     * @param jewelArmServo     the arm the drops to knock over the jewel
+     * @param jewelArmRight     the arm the drops to knock over the jewel
      * @param rackAndPinion     the rack and pinion
      * @param jewelColorSensor  the color sensor used to identify the jewel on the right
      * @param logger            the logger to use for debugging
      */
-    public JewelDisplacer(Servo jewelArmServo, RackAndPinion rackAndPinion, ModernRoboticsI2cColorSensor jewelColorSensor, RobotLogger logger) {
-        this.jewelArmServo = jewelArmServo;
+    public JewelDisplacer(Servo jewelArmRight, Servo jewelArmLeft, RackAndPinion rackAndPinion, ModernRoboticsI2cColorSensor jewelColorSensor, RobotLogger logger) {
+        this.jewelArmRight = jewelArmRight;
+        this.jewelArmLeft = jewelArmLeft;
         this.rackAndPinion = rackAndPinion;
         this.jewelColorSensor = jewelColorSensor;
         jewelColorSensor.enableLed(true);
@@ -97,7 +100,8 @@ public class JewelDisplacer {
     public void raise() {
         logger.debug("Raising Jewel Arm");
 
-        jewelArmServo.setPosition(ARM_UP_POSITION);
+        jewelArmRight.setPosition(RIGHT_ARM_UP_POSITION);
+        jewelArmLeft.setPosition(LEFT_ARM_UP_POSITION);
     }
 
     /**
@@ -106,7 +110,8 @@ public class JewelDisplacer {
     public void drop() {
         logger.debug("Dropping Jewel Arm");
 
-        jewelArmServo.setPosition(ARM_DOWN_POSITION);
+        jewelArmRight.setPosition(RIGHT_ARM_DOWN_POSITION);
+        jewelArmLeft.setPosition(LEFT_ARM_DOWN_POSITION);
     }
 
     /**
