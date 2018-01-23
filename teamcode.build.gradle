@@ -35,9 +35,9 @@ android {
     defaultConfig {
         applicationId 'com.qualcomm.ftcrobotcontroller'
 
-        if (androidPluginVersion == "2.3.3") {
-            jackOptions.enabled true
-        }
+//        if (androidPluginVersion == "2.3.3") {
+//            jackOptions.enabled true
+//        }
 
         /**
          * We keep the versionCode and versionName of robot controller applications in sync with
