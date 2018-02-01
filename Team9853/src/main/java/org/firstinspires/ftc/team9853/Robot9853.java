@@ -31,7 +31,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
-import org.firstinspires.ftc.team9853.systems.JewelDisplacer;
+
 
 /**
  * Team 9853's robot
@@ -45,7 +45,6 @@ public class Robot9853 extends Robot {
     private static final int[] LEFT_ARM_POSITIONS = {0, 1}; //up, down
     private static final int[] RIGHT_ARM_POSITIONS = {0, 1}; // up, down
     private static final String VUFORIA_LICENSE_KEY = "AeTwV0H/////AAAAGfe7ayWmjE9+nI9k65aoO+NQIIujZBIX8AxeoVDf9bwLLNvQ6QwvM+Clc3CE/8Pumv5guDuXMxkERpyJTzSb50PcrH9y/lJC9Zfh0FlPVkkvDnZVNsPEIEsg0Ta5oDlz1jIZmSB/Oxu2qRAyo4jXIsWSmDMdQdpNrwkyKbLfl/CT7PWe23RAdF8oQf5XqnSbKoapQali8MH4+HPOR8r13/k+cZv9eKqUvknmxZPiyJbp4oFzqrWDJSUqwTGQLEdbp76Hjrkuxu3Pa/I4jQSt3RRRbAUrZeV1Z79cLKg+22SvrhUKKzwxeEMcgp4rQzrMXhTL+wE+6sBczuguHmPtWA5w/NsUlevRaLbEionbyXYN";
-
 
     public HolonomicDriver driver;
     public Gripper topGripper;
@@ -171,7 +170,6 @@ public class Robot9853 extends Robot {
     public RelicRecoveryVuMark getVuMark() {
         return RelicRecoveryVuMark.from(relicTemplate);
     }
-
     /**
      * Rotates the robot by the given angle.
      * @param angle     the angle to rotate in radians
