@@ -12,21 +12,25 @@ package org.firstinspires.ftc.team9853;
 
 import android.support.annotation.NonNull;
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
-import org.chathamrobotics.common.Controller;
 import org.chathamrobotics.common.robot.Robot;
-import org.chathamrobotics.common.robot.RobotFace;
+import org.chathamrobotics.common.systems.Gripper;
 import org.chathamrobotics.common.systems.GyroHandler;
 import org.chathamrobotics.common.systems.HolonomicDriver;
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.team9853.systems.GlyphGripper;
+import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.team9853.systems.JewelDisplacer;
 
 /**
@@ -38,13 +42,21 @@ public class Robot9853 extends Robot {
     private static final int GYRO_TOERANCE = 15;
     private static final double GYRO_TOERANCE_RAD = Math.toRadians(25);
     private static final int GYRO_SCALE_FACTOR = 2;
+    private static final int[] LEFT_ARM_POSITIONS = {0, 1}; //up, down
+    private static final int[] RIGHT_ARM_POSITIONS = {0, 1}; // up, down
+    private static final String VUFORIA_LICENSE_KEY = "AeTwV0H/////AAAAGfe7ayWmjE9+nI9k65aoO+NQIIujZBIX8AxeoVDf9bwLLNvQ6QwvM+Clc3CE/8Pumv5guDuXMxkERpyJTzSb50PcrH9y/lJC9Zfh0FlPVkkvDnZVNsPEIEsg0Ta5oDlz1jIZmSB/Oxu2qRAyo4jXIsWSmDMdQdpNrwkyKbLfl/CT7PWe23RAdF8oQf5XqnSbKoapQali8MH4+HPOR8r13/k+cZv9eKqUvknmxZPiyJbp4oFzqrWDJSUqwTGQLEdbp76Hjrkuxu3Pa/I4jQSt3RRRbAUrZeV1Z79cLKg+22SvrhUKKzwxeEMcgp4rQzrMXhTL+wE+6sBczuguHmPtWA5w/NsUlevRaLbEionbyXYN";
+
 
     public HolonomicDriver driver;
-    public GlyphGripper glyphGripper;
-    public DcMotor leftLift;
-    public DcMotor rightLift;
-    public JewelDisplacer jewelDisplacer;
+    public Gripper topGripper;
+    public Gripper bottomGripper;
+    private DcMotor leftLift, rightLift;
+    private Servo leftJewelServo, rightJewelServo;
+    private ModernRoboticsI2cColorSensor leftSideColor, rightSideColor;
     private GyroHandler gyroHandler;
+    private VuforiaLocalizer vuforia;
+    private VuforiaTrackables relicTrackables;
+    private VuforiaTrackable relicTemplate;
 
     public static Robot9853 build(OpMode opMode) {
         return new Robot9853(opMode.hardwareMap, opMode.telemetry);
@@ -56,38 +68,108 @@ public class Robot9853 extends Robot {
 
     @Override
     public void init() {
-        driver = HolonomicDriver.build(this);
-        glyphGripper = GlyphGripper.build(this);
-        leftLift = getHardwareMap().dcMotor.get("LeftLift");
-        rightLift = getHardwareMap().dcMotor.get("RightLift");
-        jewelDisplacer = JewelDisplacer.build(this);
+        driver = new HolonomicDriver(
+                getHardwareMap().dcMotor.get("FrontLeftDriveMotor"),
+                getHardwareMap().dcMotor.get("FrontRightDriveMotor"),
+                getHardwareMap().dcMotor.get("BackLeftDriveMotor"),
+                getHardwareMap().dcMotor.get("BackRightDriveMotor"),
+                log
+        );
+
+        leftLift = getHardwareMap().dcMotor.get("LeftLiftMotor");
+        rightLift = getHardwareMap().dcMotor.get("RightLiftMotor");
+
+        leftJewelServo = getHardwareMap().servo.get("LeftJewelServo");
+        rightJewelServo = getHardwareMap().servo.get("RightJewelServo");
+
+        leftSideColor = (ModernRoboticsI2cColorSensor) getHardwareMap().colorSensor.get("LeftJewelColor");
+        rightSideColor = (ModernRoboticsI2cColorSensor) getHardwareMap().colorSensor.get("RightJewelColor");
+
         gyroHandler = GyroHandler.build(this);
         gyroHandler.setOrientation(GyroHandler.GyroOrientation.UPSIDE_DOWN);
         gyroHandler.setTolerance(GYRO_TOERANCE, AngleUnit.DEGREES);
 
+        topGripper = new Gripper(
+                getHardwareMap().servo.get("TopLeftLiftServo"),
+                getHardwareMap().servo.get("TopRightLiftServo"),
+                this
+        );
+
+        bottomGripper = new Gripper(
+                getHardwareMap().servo.get("BottomLeftLiftServo"),
+                getHardwareMap().servo.get("BottomRightLiftServo"),
+                this
+        );
+
         leftLift.setDirection(DcMotorSimple.Direction.REVERSE);
-        jewelDisplacer.raise();
-        glyphGripper.close();
         gyroHandler.init();
+
+        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(
+                getHardwareMap().appContext.getResources().getIdentifier("cameraMonitorViewId", "id", getHardwareMap().appContext.getPackageName())
+        );
+        parameters.vuforiaLicenseKey = VUFORIA_LICENSE_KEY;
+        parameters.cameraDirection = VuforiaLocalizer.CameraDirection.FRONT;
+
+        vuforia = ClassFactory.createVuforiaLocalizer(parameters);
+
+        relicTrackables = vuforia.loadTrackablesFromAsset("RelicVuMark");
+        relicTemplate = relicTrackables.get(0);
     }
 
     @Override
     public void start() {
-        glyphGripper.open();
+        topGripper.open();
+        bottomGripper.open();
+
+        raiseLeftArm();
+        raiseRightArm();
+
+        relicTrackables.activate();
 
         while (! gyroHandler.isInitialized()) log.update();
     }
 
     @Override
     public void stop() {
-        jewelDisplacer.raise();
-
+        raiseLeftArm();
+        raiseRightArm();
         super.stop();
     }
 
     public void setLiftPower(double power) {
         leftLift.setPower(power);
         rightLift.setPower(power);
+    }
+
+    public void dropLeftArm() {
+        leftJewelServo.setPosition(LEFT_ARM_POSITIONS[1]);
+    }
+
+    public void raiseLeftArm() {
+        leftJewelServo.setPosition(LEFT_ARM_POSITIONS[0]);
+    }
+
+    public void dropRightArm() {
+        rightJewelServo.setPosition(RIGHT_ARM_POSITIONS[1]);
+    }
+
+    public void raiseRightArm() {
+        rightJewelServo.setPosition(RIGHT_ARM_POSITIONS[1]);
+    }
+
+    public int getLeftColor() {
+        return leftSideColor.readUnsignedByte(ModernRoboticsI2cColorSensor.Register.COLOR_NUMBER);
+    }
+
+    public int getRightColor() {
+        return rightSideColor.readUnsignedByte(ModernRoboticsI2cColorSensor.Register.COLOR_NUMBER);
+    }
+
+    public boolean isRed(int color) {return color > 9 && color < 13;}
+    public boolean isBlue(int color) {return color < 4 && color > 1;}
+
+    public RelicRecoveryVuMark getVuMark() {
+        return RelicRecoveryVuMark.from(relicTemplate);
     }
 
     /**
@@ -172,32 +254,5 @@ public class Robot9853 extends Robot {
 
         log.debug("Finished rotating");
         driver.stop();
-    }
-
-    public void driveWithControls(Gamepad gp) {
-        double magnitude = Math.hypot(gp.left_stick_x, -gp.left_stick_y);
-        double direction = Math.atan2(-gp.left_stick_y, gp.left_stick_x);
-
-        if (gp.dpad_up) driver.setFront(RobotFace.FRONT);
-        if (gp.dpad_down) driver.setFront(RobotFace.BACK);
-        if (gp.dpad_left) driver.setFront(RobotFace.LEFT);
-        if (gp.dpad_right) driver.setFront(RobotFace.RIGHT);
-
-        driver.setDrivePower(direction, magnitude, gp.right_stick_x);
-    }
-
-    public void driveWithControls(Controller controller) {
-        float x = controller.left_stick_x, y = -controller.left_stick_y, rotation = controller.right_stick_x;
-        double magnitude = Math.hypot(x, y);
-        double direction = Math.atan2(y, x);
-
-        if (controller.padUpState == Controller.ButtonState.TAPPED);
-            driver.setFront(RobotFace.FRONT);
-        if (controller.padDownState == Controller.ButtonState.TAPPED);
-            driver.setFront(RobotFace.BACK);
-        if (controller.padLeftState == Controller.ButtonState.TAPPED);
-            driver.setFront(RobotFace.LEFT);
-        if (controller.padRightState == Controller.ButtonState.TAPPED);
-        driver.setFront(RobotFace.RIGHT);
     }
 }
