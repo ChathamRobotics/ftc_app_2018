@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
@@ -42,9 +43,20 @@ public class Robot9853 extends Robot {
     private static final int GYRO_TOERANCE = 15;
     private static final double GYRO_TOERANCE_RAD = Math.toRadians(25);
     private static final int GYRO_SCALE_FACTOR = 2;
-    private static final int[] LEFT_ARM_POSITIONS = {0, 1}; //up, down
-    private static final int[] RIGHT_ARM_POSITIONS = {0, 1}; // up, down
+    private static final double[] LEFT_ARM_POSITIONS = {0.0, 1.0}; //up, down
+    private static final double[] RIGHT_ARM_POSITIONS = {1.0, 0.0}; // up, down
     private static final String VUFORIA_LICENSE_KEY = "AeTwV0H/////AAAAGfe7ayWmjE9+nI9k65aoO+NQIIujZBIX8AxeoVDf9bwLLNvQ6QwvM+Clc3CE/8Pumv5guDuXMxkERpyJTzSb50PcrH9y/lJC9Zfh0FlPVkkvDnZVNsPEIEsg0Ta5oDlz1jIZmSB/Oxu2qRAyo4jXIsWSmDMdQdpNrwkyKbLfl/CT7PWe23RAdF8oQf5XqnSbKoapQali8MH4+HPOR8r13/k+cZv9eKqUvknmxZPiyJbp4oFzqrWDJSUqwTGQLEdbp76Hjrkuxu3Pa/I4jQSt3RRRbAUrZeV1Z79cLKg+22SvrhUKKzwxeEMcgp4rQzrMXhTL+wE+6sBczuguHmPtWA5w/NsUlevRaLbEionbyXYN";
+    private static final double[][] TOP_GRIPPER_POSITIONS = {
+            {0.5, 0.5}, //open {left, right}
+            {1.0, 0.0}, // close
+            {0.2, 1.0} // grip
+    };
+
+    private static final double[][] BOTTOM_GRIPPER_POSITIOINS = {
+            {0.5, 0.5},
+            {0.1, 0.9},
+            {0.9, 0.1}
+    };
 
     public HolonomicDriver driver;
     public Gripper topGripper;
@@ -82,7 +94,11 @@ public class Robot9853 extends Robot {
         rightJewelServo = getHardwareMap().servo.get("RightJewelServo");
 
         leftSideColor = (ModernRoboticsI2cColorSensor) getHardwareMap().colorSensor.get("LeftJewelColor");
+        leftSideColor.setI2cAddress(I2cAddr.create8bit(0x3c));
+        leftSideColor.enableLed(true);
         rightSideColor = (ModernRoboticsI2cColorSensor) getHardwareMap().colorSensor.get("RightJewelColor");
+        rightSideColor.setI2cAddress(I2cAddr.create8bit(0x3a));
+        rightSideColor.enableLed(true);
 
         gyroHandler = GyroHandler.build(this);
         gyroHandler.setOrientation(GyroHandler.GyroOrientation.UPSIDE_DOWN);
@@ -91,18 +107,26 @@ public class Robot9853 extends Robot {
         topGripper = new Gripper(
                 getHardwareMap().servo.get("TopLeftLiftServo"),
                 getHardwareMap().servo.get("TopRightLiftServo"),
-                this
+                this,
+                TOP_GRIPPER_POSITIONS[0],
+                TOP_GRIPPER_POSITIONS[1],
+                TOP_GRIPPER_POSITIONS[2]
         );
 
         bottomGripper = new Gripper(
                 getHardwareMap().servo.get("BottomLeftLiftServo"),
                 getHardwareMap().servo.get("BottomRightLiftServo"),
-                this
+                this,
+                BOTTOM_GRIPPER_POSITIOINS[0],
+                BOTTOM_GRIPPER_POSITIOINS[1],
+                BOTTOM_GRIPPER_POSITIOINS[2]
         );
 
         leftLift.setDirection(DcMotorSimple.Direction.REVERSE);
         gyroHandler.init();
+    }
 
+    public void initVuforia() {
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(
                 getHardwareMap().appContext.getResources().getIdentifier("cameraMonitorViewId", "id", getHardwareMap().appContext.getPackageName())
         );
@@ -123,7 +147,7 @@ public class Robot9853 extends Robot {
         raiseLeftArm();
         raiseRightArm();
 
-        relicTrackables.activate();
+        if (vuforia != null) relicTrackables.activate();
 
         while (! gyroHandler.isInitialized()) log.update();
     }
@@ -132,6 +156,10 @@ public class Robot9853 extends Robot {
     public void stop() {
         raiseLeftArm();
         raiseRightArm();
+
+        leftSideColor.enableLed(false);
+        rightSideColor.enableLed(false);
+
         super.stop();
     }
 
@@ -149,7 +177,7 @@ public class Robot9853 extends Robot {
     }
 
     public void dropRightArm() {
-        rightJewelServo.setPosition(RIGHT_ARM_POSITIONS[1]);
+        rightJewelServo.setPosition(RIGHT_ARM_POSITIONS[0]);
     }
 
     public void raiseRightArm() {
@@ -168,7 +196,8 @@ public class Robot9853 extends Robot {
     public boolean isBlue(int color) {return color < 4 && color > 1;}
 
     public RelicRecoveryVuMark getVuMark() {
-        return RelicRecoveryVuMark.from(relicTemplate);
+        if (vuforia != null) return RelicRecoveryVuMark.from(relicTemplate);
+        return null;
     }
     /**
      * Rotates the robot by the given angle.

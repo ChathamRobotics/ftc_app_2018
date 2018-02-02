@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.team9853.opmodes.teleop;
+package org.firstinspires.ftc.team9853.opmodes.tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;

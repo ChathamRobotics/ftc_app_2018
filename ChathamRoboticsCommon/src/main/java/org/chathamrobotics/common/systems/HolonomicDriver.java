@@ -113,6 +113,24 @@ public class HolonomicDriver implements Driver {
         this.logger = logger;
     }
 
+    public void setMode(DcMotor.RunMode mode) {
+        frontLeft.setMode(mode);
+        frontRight.setMode(mode);
+        backLeft.setMode(mode);
+        backRight.setMode(mode);
+    }
+
+    public void setTargetPosition(int position) {
+        frontLeft.setTargetPosition(position);
+        frontRight.setTargetPosition(position);
+        backRight.setTargetPosition(position);
+        backLeft.setTargetPosition(position);
+    }
+
+    public boolean isBusy() {
+        return frontLeft.isBusy() || frontRight.isBusy() || backLeft.isBusy() || backRight.isBusy();
+    }
+
     /**
      * Set the front of the robot
      * @param face  the face to set the front of the robot to

@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.chathamrobotics.common.Controller;
 import org.chathamrobotics.common.robot.RobotFace;
+import org.chathamrobotics.common.systems.Gripper;
 import org.firstinspires.ftc.team9853.opmodes.Tele9853;
 
 /**
@@ -29,26 +30,24 @@ public class CompDrive extends Tele9853 {
                     -controller1.left_trigger
             );
 
-        if (controller1.aState == Controller.ButtonState.TAPPED)
-            robot.topGripper.open();
+        if (controller1.aState == Controller.ButtonState.TAPPED) {
+            robot.topGripper.grip();
+            robot.bottomGripper.grip();
+        }
 
-        if (controller1.xState == Controller.ButtonState.TAPPED)
-            robot.topGripper.close();
-
-        if (controller1.yState == Controller.ButtonState.TAPPED)
-            robot.bottomGripper.open();
-
-        if (controller1.bState == Controller.ButtonState.TAPPED)
-            robot.bottomGripper.close();
-
-        if (controller1.rightBumperState == Controller.ButtonState.TAPPED) {
+        if (controller1.xState == Controller.ButtonState.TAPPED) {
             robot.topGripper.open();
             robot.bottomGripper.open();
         }
 
+        if (controller1.rightBumperState == Controller.ButtonState.TAPPED) {
+            if (robot.bottomGripper.getState() == Gripper.State.OPEN) robot.bottomGripper.grip();
+            else robot.bottomGripper.open();
+        }
+
         if (controller1.leftBumperState == Controller.ButtonState.TAPPED) {
-            robot.topGripper.close();
-            robot.bottomGripper.close();
+            if (robot.topGripper.getState() == Gripper.State.OPEN) robot.topGripper.grip();
+            else robot.topGripper.open();
         }
 
         float x = controller1.left_stick_x, y = -controller1.left_stick_y, rotation = controller1.right_stick_x;

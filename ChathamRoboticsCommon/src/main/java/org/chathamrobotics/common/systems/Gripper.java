@@ -85,12 +85,7 @@ public class Gripper implements System {
     public void open() {
         leftClaw.setPosition(openPositions[0]);
         rightClaw.setPosition(openPositions[1]);
-
-        listener.once(leftClaw,
-                (Servo claw) -> clawsAreAtTarget(openPositions),
-                () -> state = State.OPEN,
-                2000
-        );
+        state = State.OPEN;
     }
 
     /**
@@ -113,12 +108,7 @@ public class Gripper implements System {
     public void close() {
         leftClaw.setPosition(closedPositions[0]);
         rightClaw.setPosition(closedPositions[1]);
-
-        listener.once(leftClaw,
-                (Servo claw) -> clawsAreAtTarget(closedPositions),
-                () -> state = State.CLOSED,
-                2000
-        );
+        state = State.CLOSED;
     }
 
     /**
@@ -142,11 +132,7 @@ public class Gripper implements System {
         leftClaw.setPosition(grippingPositions[0]);
         rightClaw.setPosition(grippingPositions[1]);
 
-        listener.once(leftClaw,
-                (Servo claw) -> clawsAreAtTarget(grippingPositions),
-                () -> state = State.GRIPPING,
-                2000
-        );
+        state = State.GRIPPING;
     }
 
     /**

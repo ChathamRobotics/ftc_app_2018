@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.team9853.opmodes.teleop;
+package org.firstinspires.ftc.team9853.opmodes.tests;
 
 /*!
  * FTC_APP_2018
