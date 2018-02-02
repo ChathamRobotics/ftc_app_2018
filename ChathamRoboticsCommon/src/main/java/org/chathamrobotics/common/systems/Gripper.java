@@ -131,7 +131,6 @@ public class Gripper implements System {
     public void grip() {
         leftClaw.setPosition(grippingPositions[0]);
         rightClaw.setPosition(grippingPositions[1]);
-
         state = State.GRIPPING;
     }
 
