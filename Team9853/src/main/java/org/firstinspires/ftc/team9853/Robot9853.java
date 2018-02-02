@@ -64,7 +64,7 @@ public class Robot9853 extends Robot {
     private DcMotor leftLift, rightLift;
     private Servo leftJewelServo, rightJewelServo;
     private ModernRoboticsI2cColorSensor leftSideColor, rightSideColor;
-    private GyroHandler gyroHandler;
+//    private GyroHandler gyroHandler;
     private VuforiaLocalizer vuforia;
     private VuforiaTrackables relicTrackables;
     private VuforiaTrackable relicTemplate;
@@ -100,9 +100,9 @@ public class Robot9853 extends Robot {
         rightSideColor.setI2cAddress(I2cAddr.create8bit(0x3a));
         rightSideColor.enableLed(true);
 
-        gyroHandler = GyroHandler.build(this);
-        gyroHandler.setOrientation(GyroHandler.GyroOrientation.UPSIDE_DOWN);
-        gyroHandler.setTolerance(GYRO_TOERANCE, AngleUnit.DEGREES);
+//        gyroHandler = GyroHandler.build(this);
+//        gyroHandler.setOrientation(GyroHandler.GyroOrientation.UPSIDE_DOWN);
+//        gyroHandler.setTolerance(GYRO_TOERANCE, AngleUnit.DEGREES);
 
         topGripper = new Gripper(
                 getHardwareMap().servo.get("TopLeftLiftServo"),
@@ -123,7 +123,7 @@ public class Robot9853 extends Robot {
         );
 
         leftLift.setDirection(DcMotorSimple.Direction.REVERSE);
-        gyroHandler.init();
+//        gyroHandler.init();
     }
 
     public void initVuforia() {
@@ -149,16 +149,16 @@ public class Robot9853 extends Robot {
 
         if (vuforia != null) relicTrackables.activate();
 
-        while (! gyroHandler.isInitialized()) log.update();
+//        while (! gyroHandler.isInitialized()) log.update();
     }
 
     @Override
     public void stop() {
-        raiseLeftArm();
         raiseRightArm();
 
         leftSideColor.enableLed(false);
         rightSideColor.enableLed(false);
+        raiseLeftArm();
 
         super.stop();
     }
@@ -199,87 +199,87 @@ public class Robot9853 extends Robot {
         if (vuforia != null) return RelicRecoveryVuMark.from(relicTemplate);
         return null;
     }
-    /**
-     * Rotates the robot by the given angle.
-     * @param angle     the angle to rotate in radians
-     */
-    public void rotate(double angle) {
-        rotate(angle, AngleUnit.RADIANS, null);
-    }
-
-    /**
-     * Rotates the robot by the given angle and calls the callback when finished
-     * @param angle     the angle to rotate in radians
-     * @param callback  the callback
-     */
-    public void rotate(double angle, Runnable callback) {
-        rotate(angle, AngleUnit.RADIANS, callback);
-    }
-
-    /**
-     * Rotates the robot by the given angle.
-     * @param angle     the angle to rotate
-     * @param angleUnit the units of measure to use for the angles
-     */
-    public void rotate(double angle, @NonNull AngleUnit angleUnit) {
-        rotate(angle, angleUnit, null);
-    }
-
-    /**
-     * Rotates the robot by the given angle and calls the callback when finished
-     * @param angle     the angle to rotate
-     * @param angleUnit the units of measure to use for the angles
-     * @param callback  the callback
-     */
-    public void rotate(double angle, @NonNull AngleUnit angleUnit, Runnable callback) {
-        final double targetD = (angleUnit.toDegrees(angle) + gyroHandler.getRelativeHeading(AngleUnit.DEGREES)) % 360;
-        final double target = angleUnit.fromDegrees(targetD);
-        log.debug(targetD + " " + target);
-        final String unitName = angleUnit == AngleUnit.DEGREES ? "degrees" : "radians";
-
-        log.debugf("Rotating by %.2f %s to a heading of %.2f", angle, unitName, target);
-
-        gyroHandler.untilAtHeading(targetD, GYRO_TOERANCE, AngleUnit.DEGREES, dis -> {
-            log.debugf("%.2f %s away from the target heading of %.2f", angleUnit.fromDegrees(dis), unitName, target);
-            driver.rotate(Range.clip(dis * GYRO_SCALE_FACTOR / 180, 1, -1));
-            log.update();
-        }, () -> {
-            log.debug("Finished rotating");
-            driver.stop();
-
-            if (callback != null) callback.run();
-        });
-    }
-
-    /**
-     * Rotates the robot by the given angle synchronously (blocks thread)
-     * @param angle                 the angle to rotate in radians
-     * @throws InterruptedException thrown if the thread is interrupted while rotating
-     */
-    public void rotateSync(double angle) throws InterruptedException {
-        rotateSync(angle, AngleUnit.RADIANS);
-    }
-
-    /**
-     * Rotates the robot by the given angle synchronously (blocks thread)
-     * @param angle                 the angle to rotate
-     * @param angleUnit             the units of measure to use for the angles
-     * @throws InterruptedException thrown if the thread is interrupted while rotating
-     */
-    public void rotateSync(double angle, @NonNull AngleUnit angleUnit) throws InterruptedException {
-        final double targetD = (angleUnit.toDegrees(angle) + gyroHandler.getRelativeHeading(AngleUnit.DEGREES)) % 360;
-        final double target = angleUnit.fromDegrees(targetD);
-        final String unitName = angleUnit == AngleUnit.DEGREES ? "degrees" : "radians";
-
-        log.debugf("Rotating by %.2f %s to a heading of %.2f", angle, unitName, target);
-
-        gyroHandler.untilAtHeadingSync(targetD, GYRO_TOERANCE, AngleUnit.DEGREES, dis -> {
-            log.debugf("%.2f %s away from the target heading of %.2f", angleUnit.fromDegrees(dis), unitName, target);
-            driver.rotate(Range.clip(dis * GYRO_SCALE_FACTOR / -180, 1, -1));
-            log.update();
-        });
-
-        log.debug("Finished rotating");
-        driver.stop();
-    }
+//    /**
+//     * Rotates the robot by the given angle.
+//     * @param angle     the angle to rotate in radians
+//     */
+//    public void rotate(double angle) {
+//        rotate(angle, AngleUnit.RADIANS, null);
+//    }
+//
+//    /**
+//     * Rotates the robot by the given angle and calls the callback when finished
+//     * @param angle     the angle to rotate in radians
+//     * @param callback  the callback
+//     */
+//    public void rotate(double angle, Runnable callback) {
+//        rotate(angle, AngleUnit.RADIANS, callback);
+//    }
+//
+//    /**
+//     * Rotates the robot by the given angle.
+//     * @param angle     the angle to rotate
+//     * @param angleUnit the units of measure to use for the angles
+//     */
+//    public void rotate(double angle, @NonNull AngleUnit angleUnit) {
+//        rotate(angle, angleUnit, null);
+//    }
+//
+//    /**
+//     * Rotates the robot by the given angle and calls the callback when finished
+//     * @param angle     the angle to rotate
+//     * @param angleUnit the units of measure to use for the angles
+//     * @param callback  the callback
+//     */
+//    public void rotate(double angle, @NonNull AngleUnit angleUnit, Runnable callback) {
+//        final double targetD = (angleUnit.toDegrees(angle) + gyroHandler.getRelativeHeading(AngleUnit.DEGREES)) % 360;
+//        final double target = angleUnit.fromDegrees(targetD);
+//        log.debug(targetD + " " + target);
+//        final String unitName = angleUnit == AngleUnit.DEGREES ? "degrees" : "radians";
+//
+//        log.debugf("Rotating by %.2f %s to a heading of %.2f", angle, unitName, target);
+//
+//        gyroHandler.untilAtHeading(targetD, GYRO_TOERANCE, AngleUnit.DEGREES, dis -> {
+//            log.debugf("%.2f %s away from the target heading of %.2f", angleUnit.fromDegrees(dis), unitName, target);
+//            driver.rotate(Range.clip(dis * GYRO_SCALE_FACTOR / 180, 1, -1));
+//            log.update();
+//        }, () -> {
+//            log.debug("Finished rotating");
+//            driver.stop();
+//
+//            if (callback != null) callback.run();
+//        });
+//    }
+//
+//    /**
+//     * Rotates the robot by the given angle synchronously (blocks thread)
+//     * @param angle                 the angle to rotate in radians
+//     * @throws InterruptedException thrown if the thread is interrupted while rotating
+//     */
+//    public void rotateSync(double angle) throws InterruptedException {
+//        rotateSync(angle, AngleUnit.RADIANS);
+//    }
+//
+//    /**
+//     * Rotates the robot by the given angle synchronously (blocks thread)
+//     * @param angle                 the angle to rotate
+//     * @param angleUnit             the units of measure to use for the angles
+//     * @throws InterruptedException thrown if the thread is interrupted while rotating
+//     */
+//    public void rotateSync(double angle, @NonNull AngleUnit angleUnit) throws InterruptedException {
+//        final double targetD = (angleUnit.toDegrees(angle) + gyroHandler.getRelativeHeading(AngleUnit.DEGREES)) % 360;
+//        final double target = angleUnit.fromDegrees(targetD);
+//        final String unitName = angleUnit == AngleUnit.DEGREES ? "degrees" : "radians";
+//
+//        log.debugf("Rotating by %.2f %s to a heading of %.2f", angle, unitName, target);
+//
+//        gyroHandler.untilAtHeadingSync(targetD, GYRO_TOERANCE, AngleUnit.DEGREES, dis -> {
+//            log.debugf("%.2f %s away from the target heading of %.2f", angleUnit.fromDegrees(dis), unitName, target);
+//            driver.rotate(Range.clip(dis * GYRO_SCALE_FACTOR / -180, 1, -1));
+//            log.update();
+//        });
+//
+//        log.debug("Finished rotating");
+//        driver.stop();
+//    }
 }

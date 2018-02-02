@@ -133,6 +133,7 @@ public abstract class Robot extends HardwareListener {
 
         stopAllMotors();
         setServosToRestPosition();
+        removeAllListeners();
     }
 
     /**

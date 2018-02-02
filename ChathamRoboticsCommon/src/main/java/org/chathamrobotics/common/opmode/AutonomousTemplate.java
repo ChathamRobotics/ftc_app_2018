@@ -9,6 +9,8 @@ package org.chathamrobotics.common.opmode;
  * @Last Modified time: 9/17/2017
  */
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.chathamrobotics.common.opmode.exceptions.StoppedException;
@@ -51,6 +53,7 @@ public abstract class AutonomousTemplate<R extends Robot> extends LinearOpMode {
             setup();
             telemetry.update();
             waitForStart();
+            Log.d(this.getClass().getSimpleName(), "Starting");
             run();
             debug();
         } catch (StoppedException | InterruptedException err) {
@@ -59,7 +62,7 @@ public abstract class AutonomousTemplate<R extends Robot> extends LinearOpMode {
             RobotErrors.reportGlobalError(this.getClass().getSimpleName(),"Encountered error while running opmode:" + err.getMessage());
         } finally {
             if (robot != null) robot.stop();
-            stop();
+//            stop();
         }
     }
 

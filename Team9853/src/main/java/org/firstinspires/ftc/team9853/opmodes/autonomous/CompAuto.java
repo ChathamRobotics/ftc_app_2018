@@ -45,7 +45,7 @@ public class CompAuto extends Autonomous9853 {
 
     @Override
     public void run() throws InterruptedException, StoppedException {
-        RelicRecoveryVuMark vuMark;
+//        RelicRecoveryVuMark vuMark;
 
         robot.start();
         robot.driver.setFront(RobotFace.BACK);
@@ -55,34 +55,43 @@ public class CompAuto extends Autonomous9853 {
 //        robot.log.info("VuMark", vuMark);
 
         /////// PICKUP GLYPH //////
+        robot.log.info("Grabbing glyph");
         robot.bottomGripper.close();
 
         ////// HIT JEWEL //////
+        robot.log.info("Dropping Arm");
         if (useLeftArm) robot.dropLeftArm();
         else robot.dropRightArm();
 
         debug();
 
+        robot.log.info("Getting Color");
         Thread.sleep(1000);
         int color = useLeftArm ? robot.getLeftColor() : robot.getRightColor();
         int rot = 0;
-        if (isRedTeam() && robot.isRed(color) || (! isRedTeam() && robot.isBlue(color))) rot = -1;
-        else if ((isRedTeam() && robot.isBlue(color)) || (! isRedTeam() && robot.isRed(color))) rot = 1;
 
+        robot.log.info("Found Color Number", color);
+        if (isRedTeam() && robot.isRed(color) || (! isRedTeam() && robot.isBlue(color))) rot = 1;
+        else if ((isRedTeam() && robot.isBlue(color)) || (! isRedTeam() && robot.isRed(color))) rot = -1;
+
+        robot.log.info("Hitting Jewel");
         robot.driver.setDrivePower(0, 0, rot);
         debug();
 
         Thread.sleep(1000/4);
         robot.driver.stop();
 
+        robot.log.info("Raising Arm");
         if (useLeftArm) robot.raiseLeftArm();
         else robot.raiseRightArm();
 
+        robot.log.info("Repositioning");
         robot.driver.setDrivePower(0, 0, -rot);
         debug();
 
         Thread.sleep(1000/4);
         robot.driver.stop();
+        telemetry.update();
 
         ////// DRIVE TO CRYPTO BOX //////
 //        robot.driver.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -124,5 +133,12 @@ public class CompAuto extends Autonomous9853 {
 
         robot.raiseRightArm();
         robot.raiseLeftArm();
+    }
+
+    private void moveToPosition(int position, double direction, double power) throws InterruptedException {
+        robot.driver.setTargetPosition(position);
+        robot.driver.setDrivePower(direction, AngleUnit.DEGREES, power, 0);
+
+        while (robot.driver.isBusy()) Thread.sleep(10);
     }
 }

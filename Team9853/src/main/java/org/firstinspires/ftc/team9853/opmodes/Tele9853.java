@@ -17,6 +17,13 @@ import org.firstinspires.ftc.team9853.Robot9853;
 @SuppressWarnings("unused")
 public abstract class Tele9853 extends TeleOpTemplate<Robot9853> {
     @Override
+    public void start() {
+        super.start();
+
+        robot.start();
+    }
+
+    @Override
     public void init() {
         super.init();
 
