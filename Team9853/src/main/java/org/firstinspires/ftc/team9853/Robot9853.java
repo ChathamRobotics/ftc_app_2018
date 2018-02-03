@@ -94,10 +94,10 @@ public class Robot9853 extends Robot {
         rightJewelServo = getHardwareMap().servo.get("RightJewelServo");
 
         leftSideColor = (ModernRoboticsI2cColorSensor) getHardwareMap().colorSensor.get("LeftJewelColor");
-        leftSideColor.setI2cAddress(I2cAddr.create8bit(0x3c));
+        leftSideColor.setI2cAddress(I2cAddr.create8bit(0x3e));
         leftSideColor.enableLed(true);
         rightSideColor = (ModernRoboticsI2cColorSensor) getHardwareMap().colorSensor.get("RightJewelColor");
-        rightSideColor.setI2cAddress(I2cAddr.create8bit(0x3a));
+        rightSideColor.setI2cAddress(I2cAddr.create8bit(0x3c));
         rightSideColor.enableLed(true);
 
 //        gyroHandler = GyroHandler.build(this);
