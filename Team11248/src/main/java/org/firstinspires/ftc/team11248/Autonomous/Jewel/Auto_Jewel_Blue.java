@@ -8,8 +8,15 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 @Autonomous(name = "Jewel Blue")
 
+<<<<<<< Updated upstream
 public class Auto_Jewel_Blue extends Auto_Jewel_Template{
     public Auto_Jewel_Blue(){
         super(true);
     }
+=======
+@Autonomous(name = "Blue Jewel")
+
+public class Auto_Jewel_Blue extends Auto_Jewel_Template {
+    public Auto_Jewel_Blue() { super(true); }
+>>>>>>> Stashed changes
 }

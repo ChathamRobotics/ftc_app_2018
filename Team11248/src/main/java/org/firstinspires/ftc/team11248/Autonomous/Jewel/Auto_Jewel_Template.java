@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.team11248.Autonomous.Jewel;
 
+<<<<<<< Updated upstream
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
@@ -10,13 +11,34 @@ import org.firstinspires.ftc.team11248.Robot11248;
  * Created by Tony_Air on 11/28/17.
  */
 
+=======
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.Hardware;
+
+import org.chathamrobotics.common.robot.Robot;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.team11248.Robot11248;
+
+/**
+ * Created by tonytesoriero on 11/28/17.
+ */
+
+@Autonomous(name = "Blue Jewel")
+
+>>>>>>> Stashed changes
 public class Auto_Jewel_Template extends LinearOpMode {
 
     private boolean isBlueAlliance;
     DcMotor lift;
     Claw claw;
 
+<<<<<<< Updated upstream
     public Auto_Jewel_Template (boolean isBlueAlliance){
+=======
+    public Auto_Jewel_Template(boolean isBlueAlliance){
+>>>>>>> Stashed changes
         this.isBlueAlliance = isBlueAlliance;
     }
 
@@ -40,6 +62,14 @@ public class Auto_Jewel_Template extends LinearOpMode {
 
 
         robot.lowerJewelArm();
+<<<<<<< Updated upstream
+=======
+<<<<<<< Updated upstream
+        sleep(2000);
+=======
+        sleep(1000);
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 
         claw.grab();
         sleep(200);
@@ -51,6 +81,7 @@ public class Auto_Jewel_Template extends LinearOpMode {
         boolean isLeftJewelRed = true; //robot.jewelColor.isRed();
         boolean isLeftJewelBlue = true;//robot.jewelColor.isBlue();
 
+<<<<<<< Updated upstream
 
         if( !(isLeftJewelBlue == isLeftJewelRed) ) {
 
@@ -98,3 +129,22 @@ public class Auto_Jewel_Template extends LinearOpMode {
 
     }
 }
+=======
+        if(!(isLeftJewelBlue == isLeftJewelRed)) { //if sensor does not read both red and blue or none
+
+            // negative is towards left jewel
+            // if were on blue we want to move towards the red ball
+            // if blue is true and left is red we move negativly into it
+
+            robot.drive(0, -.5 * ( (isBlueAlliance?isLeftJewelRed:isLeftJewelBlue) ? 1 : -1), 0);
+            sleep(500);
+
+            robot.stop();
+        }
+
+        robot.raiseJewelArm();
+        robot.deactivateColorSensors();
+    }
+}
+
+>>>>>>> Stashed changes
