@@ -48,8 +48,8 @@ public class Auto_Jewel_Template extends LinearOpMode {
         lift.setPower(0);
 
         sleep(1500);
-        boolean isLeftJewelRed = robot.jewelColor.isRed();
-        boolean isLeftJewelBlue = robot.jewelColor.isBlue();
+        boolean isLeftJewelRed = true; //robot.jewelColor.isRed();
+        boolean isLeftJewelBlue = true;//robot.jewelColor.isBlue();
 
 
         if( !(isLeftJewelBlue == isLeftJewelRed) ) {

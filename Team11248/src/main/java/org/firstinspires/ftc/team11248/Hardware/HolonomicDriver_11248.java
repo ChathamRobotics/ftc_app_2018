@@ -28,8 +28,8 @@ public class HolonomicDriver_11248 {
 
 
     // TODO: 12/11/2016 oz add some comments about this stuff. Also u might want to make is slow public for simplicities sake
-    public static double MAX_TURN = .4;
-    public static double MAX_SPEED = .6;
+    public static double MAX_TURN = .7;
+    public static double MAX_SPEED = .3;
     public static final double SLOW_SPEED = .4;
     private boolean isSlow = false;
     private boolean isDrift = false;
@@ -149,10 +149,10 @@ public class HolonomicDriver_11248 {
         /* Prevent fatal error cause by slightly imperfect joystick values
          * Will drive in approximate direction if true
          */
-        frontLeft.setPower( Range.clip(-FL * SPEED, -1, 1)); // -rot fl br y
-        frontRight.setPower( Range.clip(-FR * SPEED, -1, 1)); // -
-        backLeft.setPower( Range.clip(BL * SPEED, -1, 1)); // +
-        backRight.setPower( Range.clip(BR * SPEED, -1, 1)); //+
+        frontLeft.setPower( Range.clip(FL * SPEED, -1, 1)); // -rot fl br y
+        frontRight.setPower( Range.clip(FR * SPEED, -1, 1)); // -
+        backLeft.setPower( Range.clip(-BL * SPEED, -1, 1)); // +
+        backRight.setPower( Range.clip(-BR * SPEED, -1, 1)); //+
 
         recordPosition();
 

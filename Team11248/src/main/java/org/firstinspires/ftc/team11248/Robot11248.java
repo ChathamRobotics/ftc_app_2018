@@ -4,6 +4,7 @@ package org.firstinspires.ftc.team11248;
  * Created by tonytesoriero on 9/11/17.
  */
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -17,6 +18,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoController;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
+import org.firstinspires.ftc.robotcontroller.external.samples.SensorREVColorDistance;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.team11248.Hardware.Claw;
 import org.firstinspires.ftc.team11248.Hardware.HolonomicDriver_11248;
@@ -32,15 +34,11 @@ public class Robot11248 extends HolonomicDriver_11248 {
     private boolean silent = false;
 
     //Gyro Thresholds
-    private static final int GYRO_THRESHOLD = 1;
+    private static final double GYRO_THRESHOLD = 1;
 
     //Sensor Addresses
 
-    private final byte JEWEL_COLOR_SENSOR_ADDR = 0x36;
-    private final byte FRONT_FLOOR_COLOR_SENSOR_ADDR = 0x3C; //Front
-    private final byte BACK_FLOOR_COLOR_SENSOR_ADDR = 0x60; //Back
-    private final byte RANGE_SENSOR_ADDR = 0x28;
-    private final byte GYRO_SENSOR_ADDR = 0x20; //Not used
+
 
      /*
      * CLAW DECLARATIONS
@@ -60,24 +58,25 @@ public class Robot11248 extends HolonomicDriver_11248 {
      */
 
     private ServoController servoController1, servoController2;
-    private Servo jewelArm;
+    private Servo jewelArmDown, jewelArmFlick;
     private final double jewelDown = 0.09; // servo7
     private final double jewelUp = .85;
+    private final double jewelLeft = 0;
+    private final double jewelRight = 0;
+    private final double jewelCenter = 0;
 
 
     /*
      * MOTOR DECLARATIONS
      */
 
-    public DcMotor frontLift, backLift; //TODO private
+    public DcMotor frontLift, backLift, relicArm; //TODO private
 
     /*
      * SENSOR DECLARATIONS
      */
-    public MRColorSensorV3 jewelColor, frontFloorColor, backFloorColor;
-    public MRRangeSensor_V2 rangeSensor;
-    public GyroSensor gyro;
-    private DeviceInterfaceModule dim;
+    public SensorREVColorDistance jewelColor;
+    public BNO055IMU imu;
     private Telemetry telemetry;
 
 
@@ -101,31 +100,21 @@ public class Robot11248 extends HolonomicDriver_11248 {
         /*
          * SERVO INITS
          */
-        this.jewelArm = hardwareMap.servo.get("servo7");
-        this.frontClaw = new Claw(hardwareMap, frontServoNames, open, release, grab, close);
-        this.backClaw = new Claw(hardwareMap, backServoNames, open, release, grab, close);
-        this.servoController1 = hardwareMap.servoController.get("Servo Controller 0");
-        this.servoController2 = hardwareMap.servoController.get("Servo Controller 1");
+        this.jewelArmDown = hardwareMap.servo.get("servo7");
+        this.jewelArmFlick = hardwareMap.servo.get("servo7");
+
+        this.frontClaw = new Claw(frontServoNames, open, release, grab, close, hardwareMap, telemetry);
+        this.backClaw = new Claw(backServoNames, open, release, grab, close, hardwareMap, telemetry);
+
+        this.relicArm = hardwareMap.dcMotor.get("relic");
+
 
          /*
          * SENSOR INITS
          */
 
-        this.gyro = hardwareMap.gyroSensor.get("gyro");
-
-        I2cDevice range = hardwareMap.i2cDevice.get("range");
-        I2cDevice color1 = hardwareMap.i2cDevice.get("color");
-        I2cDevice color2 = hardwareMap.i2cDevice.get("colorFloorBack");
-        I2cDevice color3 = hardwareMap.i2cDevice.get("colorFloorFront");
-
-        this.rangeSensor = new MRRangeSensor_V2(range, RANGE_SENSOR_ADDR);
-        this.jewelColor = new MRColorSensorV3(color1, JEWEL_COLOR_SENSOR_ADDR);
-        this.backFloorColor = new MRColorSensorV3(color2, BACK_FLOOR_COLOR_SENSOR_ADDR);
-        this.frontFloorColor = new MRColorSensorV3(color3, FRONT_FLOOR_COLOR_SENSOR_ADDR);
 
         this.telemetry = telemetry;
-        this.dim = hardwareMap.get(DeviceInterfaceModule.class, "Device Interface Module 1");
-
         this.vuforia = new Vuforia_V2(hardwareMap);
     }
 
@@ -142,15 +131,11 @@ public class Robot11248 extends HolonomicDriver_11248 {
      * COLOR SENSOR METHODS
      */
     public void activateColorSensors(){
-        jewelColor.enableLed(true);
-        frontFloorColor.enableLed(true);
-        backFloorColor.enableLed(true);
+
     }
 
     public void deactivateColorSensors(){
-        jewelColor.enableLed(false);
-        frontFloorColor.enableLed(false);
-        backFloorColor.enableLed(false);
+
     }
 
 
@@ -160,12 +145,11 @@ public class Robot11248 extends HolonomicDriver_11248 {
      */
 
     public void calibrateGyro(){
-        gyro.calibrate();
-        while(gyro.isCalibrating());
+
     }
 
     public int getGyroAngle(){
-        return  gyro.getHeading();
+        return 1;
     }
 
     public boolean driveWithGyro(double x, double y, int targetAngle, boolean smooth) {
@@ -241,11 +225,9 @@ public class Robot11248 extends HolonomicDriver_11248 {
      * JEWEL ARM/SERVO METHODS
      */
     public void lowerJewelArm(){
-        jewelArm.setPosition(jewelDown);
     }
 
     public void raiseJewelArm(){
-        jewelArm.setPosition(jewelUp);
     }
 
     public void activateServos(){
@@ -276,22 +258,15 @@ public class Robot11248 extends HolonomicDriver_11248 {
     /*
      * LED METHODS
      */
-    public void setDimLed(boolean red, boolean blue){
-        dim.setLED(0, red);
-        dim.setLED(1, blue);
+    public void setDimLed(boolean red, boolean blue) {
     }
-
     public void setDimLed(){
-        dim.setLED(0, false);
-        dim.setLED(1, false);
     }
 
     public void setDimRedLed(boolean on){
-        dim.setLED(0, on);
     }
 
     public void setDimBlueLed(boolean on){
-        dim.setLED(1, on);
     }
 
     /*

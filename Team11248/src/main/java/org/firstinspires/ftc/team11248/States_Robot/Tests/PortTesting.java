@@ -1,13 +1,10 @@
-package org.firstinspires.ftc.team11248.Rev_Test;
+package org.firstinspires.ftc.team11248.States_Robot.Tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorImpl;
-import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
-import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.team11248.Hardware.MRRangeSensor_V2;
 

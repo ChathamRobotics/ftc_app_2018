@@ -20,7 +20,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 public class ServoDebug extends OpMode {
 
-    Servo servo1, servo2, servo3, servo4, servo5, servo6, servo7, servo8, servo9, servo10, servo11, servo12;
+    Servo servo1, servo2, servo3, servo4, servo5, servo6, servo7, servo8, servo9, servo10;
 
     int servo = 1;
     double servoPosition = 0;
@@ -40,8 +40,6 @@ public class ServoDebug extends OpMode {
         servo8 = hardwareMap.servo.get("servo8");
         servo9 = hardwareMap.servo.get("servo9");
         servo10 = hardwareMap.servo.get("servo10");
-        servo11 = hardwareMap.servo.get("servo11");
-        servo12 = hardwareMap.servo.get("servo12");
 
     }
 
@@ -51,7 +49,7 @@ public class ServoDebug extends OpMode {
         if(gamepad1.a && !prevA) servo++;
         prevA = gamepad1.a;
 
-        if(servo == 13) servo = 1;
+        if(servo == 11) servo = 1;
 
 
         if(gamepad1.dpad_down && !prevDPD && servoPosition - increment> 0) servoPosition -= increment;
@@ -102,13 +100,6 @@ public class ServoDebug extends OpMode {
                 servo10.setPosition(servoPosition);
                 break;
 
-            case 11:
-                servo11.setPosition(servoPosition);
-                break;
-
-            case 12:
-                servo12.setPosition(servoPosition);
-                break;
 
 
         }

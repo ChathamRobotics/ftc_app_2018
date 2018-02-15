@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.team11248.CompSci_Education;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -8,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  */
 
 @TeleOp(name = "Boi")
+@Disabled
 public class BoiBot_Tele extends OpMode{
 
     BoiBot robot;
