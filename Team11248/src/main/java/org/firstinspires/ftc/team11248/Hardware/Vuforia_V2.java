@@ -14,7 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
-import org.firstinspires.ftc.team11248.Robot11248;
+import org.firstinspires.ftc.team11248.Old_Files.Robot11248;
 
 /**
  * Created by tonytesoriero on 9/11/17.
@@ -38,6 +38,11 @@ public class Vuforia_V2 {
     public Vuforia_V2(HardwareMap hardwareMap){
         this.hardwareMap = hardwareMap;
     }
+
+
+    /*
+    Init
+     */
 
     public void init(){
         init(true, false);
@@ -69,6 +74,11 @@ public class Vuforia_V2 {
         relicTemplate.setName("relicVuMarkTemplate");
     }
 
+
+    /*
+    Vumark Recognition
+     */
+
     public void activateTracking(){
         this.relicTrackables.activate();
     }
@@ -85,6 +95,11 @@ public class Vuforia_V2 {
 
         return lastVuMark;
     }
+
+
+    /*
+    Positional Information
+     */
 
     // Millimeters
     public double[] getPosition(){
@@ -119,6 +134,19 @@ public class Vuforia_V2 {
 
         return lastRotation;
 
+    }
+
+
+    public void resetCache(){
+        lastVuMark = RelicRecoveryVuMark.UNKNOWN;
+
+        lastPosition[0] = 0;
+        lastPosition[1] = 0;
+        lastPosition[2] = 0;
+
+        lastRotation[0] = 0;
+        lastRotation[1] = 0;
+        lastRotation[2] = 0;
     }
 
 }

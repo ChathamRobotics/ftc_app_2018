@@ -16,16 +16,17 @@ public class Claw {
         OPEN,
         RELEASE,
         GRAB,
-        CLOSE,
     }
 
-    public Position state;
-
-    private double[] open, grab, close, release;
+    public Position topState;
+    public Position bottomState;
+    public String header;
+    private double[] open, grab, release;
+    private int lastRotation = 0;
 
     private Servo tl, tr, bl, br;
-
     private DcMotor motor;
+    private Telemetry telemetry;
 
 
     /**
@@ -33,14 +34,14 @@ public class Claw {
      * @param motorServoNames String array of 4 Servonames of one claw in order of {motor, top_left, top_right, bottom_left, bottom_right}
      * @param open Double array of 4 open values of the servos {top_left, top_right, bottom_left, bottom_right}
      * @param grab Double array of 4 grabbing values of the servos {top_left, top_right, bottom_left, bottom_right}
-     * @param close Double array of 4 closed values of the servos {top_left, top_right, bottom_left, bottom_right}
      */
-    public Claw(String[] motorServoNames, double[] open, double[] release, double[] grab, double[] close, HardwareMap hardwareMap, Telemetry telemetry){
+    public Claw(String header, String[] motorServoNames, double[] open, double[] release, double[] grab, HardwareMap hardwareMap, Telemetry telemetry){
+
+        this.header = header;
 
         this.open = open;
         this.release = release;
         this.grab = grab;
-        this.close = close;
 
         this.motor = hardwareMap.dcMotor.get(motorServoNames[0]);
 
@@ -49,60 +50,145 @@ public class Claw {
         this.bl = hardwareMap.servo.get(motorServoNames[3]);
         this.br = hardwareMap.servo.get(motorServoNames[4]);
 
+        this.telemetry = telemetry;
     }
+
+    public void init(){
+        open();
+        setDriftMode(false);
+        resetEncoders();
+    }
+
+
+    /*
+    Servo Methods
+     */
+
+    public void openTop(){
+
+        if(bottomState == Position.OPEN || bottomState == Position.RELEASE) openBottom();
+
+        tl.setPosition(open[0]);
+        tr.setPosition(open[1]);
+
+        topState = Position.OPEN;
+    }
+
+    public void openBottom(){
+        bl.setPosition(open[2]);
+        br.setPosition(open[3]);
+
+        bottomState = Position.OPEN;
+    }
+
+
+    public void releaseTop(){
+
+        if(bottomState == Position.GRAB) releaseBottom();
+
+        tl.setPosition(release[0]);
+        tr.setPosition(release[1]);
+
+        topState = Position.RELEASE;
+    }
+
+    public void releaseBottom(){
+
+        if(topState == Position.OPEN) releaseTop();
+
+        bl.setPosition(release[2]);
+        br.setPosition(release[3]);
+
+        bottomState = Position.RELEASE;
+    }
+
 
     public void grabTop(){
         tl.setPosition(grab[0]);
         tr.setPosition(grab[1]);
+
+        topState = Position.GRAB;
     }
 
-    public void open(){
-        tl.setPosition(open[0]);
-        tr.setPosition(open[1]);
-        bl.setPosition(open[2]);
-        br.setPosition(open[3]);
+    public void grabBottom(){
 
-        state = Position.OPEN;
-    }
+        if(topState == Position.OPEN || topState == Position.RELEASE) grabTop();
 
-    public void release(){
-
-        tl.setPosition(release[0]);
-        tr.setPosition(release[1]);
-        bl.setPosition(release[2]);
-        br.setPosition(release[3]);
-
-        state = Position.RELEASE;
-
-    }
-
-    public void grab(){
-        tl.setPosition(grab[0]);
-        tr.setPosition(grab[1]);
         bl.setPosition(grab[2]);
         br.setPosition(grab[3]);
 
-        state = Position.GRAB;
+        bottomState = Position.GRAB;
     }
 
-    public void close() {
 
-        tl.setPosition(close[0]);
-        tr.setPosition(close[1]);
-        bl.setPosition(close[2]);
-        br.setPosition(close[3]);
-
-        state = Position.CLOSE;
+    public void open(){
+        openTop();
+        openBottom();
     }
+
+    public void release(){
+        releaseTop();
+        releaseBottom();
+    }
+
+    public void grab(){
+        grabTop();
+        grabBottom();
+    }
+
+
+
+    /*
+    Motor Methods
+     */
 
     public void setPower(double power){
         motor.setPower(power);
     }
 
-    public void printTelemetry(){
-        //TODO: printTelemetry()
+    public void setDriftMode(boolean on){
+        motor.setZeroPowerBehavior( on? DcMotor.ZeroPowerBehavior.FLOAT:DcMotor.ZeroPowerBehavior.BRAKE );
     }
 
-    //TODO: record encoder values and movement implementations
+    public void setMotorMode(DcMotor.RunMode runmode){
+        motor.setMode(runmode);
+    }
+
+
+    /*
+    Encoder Methods
+     */
+
+    public void recordPosition(){
+        lastRotation = motor.getCurrentPosition();
+    }
+
+    public void resetEncoders() {
+        setMotorMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        recordPosition();
+        setMotorMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
+    public int getCurrentPosition(){
+        recordPosition();
+        return lastRotation;
+    }
+
+    public int getLastPosition(){
+        return lastRotation;
+    }
+
+
+    /*
+    Telemetry Methods
+     */
+
+    public void printTelemetry(){
+
+        telemetry.addData(" ", " ");
+        telemetry.addData(header + "Top Claw", "Top State: "+ topState.toString());
+        telemetry.addData(header + "Bottom Claw", "Bottom State: "+ bottomState.toString());
+        telemetry.addData(header + " Claw", "Rotation: " + getCurrentPosition());
+    }
 
 }

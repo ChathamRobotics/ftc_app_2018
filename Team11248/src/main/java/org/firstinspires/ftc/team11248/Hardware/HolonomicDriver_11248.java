@@ -2,6 +2,7 @@ package org.firstinspires.ftc.team11248.Hardware;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
@@ -12,38 +13,51 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
  */
 public class HolonomicDriver_11248 {
 
-    //    CONSTANTS     //
-    public static final double OMNI_WHEEL_ANGLE_CORRECTION = Math.PI/4;
+    /*
+    Constants
+     */
+
+    public static final double HOLONOMIC_CORRECTION_ANGLE = Math.PI/4;
+
     public static final double FRONT_OFFSET = 0;
     public static final double LEFT_OFFSET = Math.PI/2;
     public static final double BACK_OFFSET = Math.PI;
     public static final double RIGHT_OFFSET = 3 * Math.PI / 2;
 
-
-    //    STATEFUl      //
-    private Telemetry telemetry;
-    private DcMotor frontLeft, frontRight, backLeft, backRight;
-
-    int frontLeftRotations, frontRightRotations, backLeftRotations, backRightRotations;
-
-
-    // TODO: 12/11/2016 oz add some comments about this stuff. Also u might want to make is slow public for simplicities sake
-    public static double MAX_TURN = .7;
-    public static double MAX_SPEED = .3;
+    public static final double MAX_TURN = .7;
+    public static final double MAX_SPEED = .3;
     public static final double SLOW_SPEED = .4;
+
+
+    /*
+    Mode Trackers
+     */
+
     private boolean isSlow = false;
     private boolean isDrift = false;
     private boolean fastMode = false;
 
-    /*
-     * The angle used to offset the front of the robot
-     */
-    private double offsetAngle, directionAngle;
 
     /*
-     * Whether or not to log telemetry data
+    Hardware
      */
-    private boolean silent = true;
+
+    private Telemetry telemetry;
+    private DcMotor frontLeft, frontRight, backLeft, backRight;
+
+    private int frontLeftRotations, frontRightRotations, backLeftRotations, backRightRotations;
+
+
+    /*
+    Drive Values
+     */
+
+    private double FL, FR, BL, BR;
+    private double x, y, rot;
+    private double angle, radius;
+    private double offsetAngle;
+
+
 
     /**
      * creates new HolonomicDriver_11248.
@@ -53,6 +67,7 @@ public class HolonomicDriver_11248 {
      * @param backRight {DcMotor} - back right motor
      * @param telemetry {Telemetry} - telemetry
      */
+
     public HolonomicDriver_11248(DcMotor frontLeft, DcMotor frontRight, DcMotor backLeft,
                                  DcMotor backRight, Telemetry telemetry) {
         this.frontLeft = frontLeft;
@@ -61,42 +76,58 @@ public class HolonomicDriver_11248 {
         this.backRight = backRight;
         this.telemetry = telemetry;
 
-        resetDriveEncoders();
-        recordPosition();
-        setDriveMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        this.frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+
     }
 
+    public void initDrive(){
+        resetDriveEncoders();
+        setDriftMode(false);
+    }
+
+
+
+    /*
+    Drive Methods
+     */
+
+    public void setMotorPower(double fl, double fr, double bl, double br){
+        frontLeft.setPower( Range.clip(fl, -1, 1));
+        frontRight.setPower( Range.clip(fr, -1, 1));
+        backLeft.setPower( Range.clip(bl, -1, 1));
+        backRight.setPower( Range.clip(br, -1, 1));
+    }
 
     public void stop(){
-        drive(0,0,0);
+        setMotorPower(0,0,0,0);
     }
 
-
     /**
-     * Team 11248's driving method for omni wheel drive
-     * @param x - values of x to drive (double -1 to +1)
-     * @param y - values of y to drive (double -1 to +1)
+     * Team 11248's driving method for holonomic wheel drive
+     * @param xi - values of x to drive (double -1 to +1)
+     * @param yi - values of y to drive (double -1 to +1)
      * @param rotate - values for rotation to drive (double -1 to +1)
      * @param smooth - boolean declaring if driving values are smoothed (low values easier to control)
      */
 
-    public void drive(double x, double y, double rotate, boolean smooth){
-        double FL, FR, BL, BR, angle, r;
-        double MAX_TURN, MAX_SPEED;
-        //## CALCULATE VALUES ##
+    public void drive(double xi, double yi, double rotate, boolean smooth) {
+
 
         /*
-         * Protects range of joysticks
+        CARTESIAN VALUES
          */
-        x = Range.clip(x, -1, 1);
-        y = Range.clip(y, -1, 1);
-        rotate = Range.clip(rotate, -1, 1);
 
+        this.x = Range.clip(xi, -1, 1);
+        this.y = Range.clip(yi, -1, 1);
+        this.rot = Range.clip(rotate, -1, 1);
 
         /* This makes the rotation and speed ratios relative to the rotation value
          * So when we don't have a rotation we can drive at full speed instead of a fraction of speed
          * If rotation is being used, a ratio is induced to prevent a value greater than 1
          */
+
+        double MAX_TURN, MAX_SPEED;
 
         if (smooth) {
             MAX_TURN = Math.abs(rotate) * HolonomicDriver_11248.MAX_TURN;
@@ -107,109 +138,54 @@ public class HolonomicDriver_11248 {
             MAX_TURN = HolonomicDriver_11248.MAX_TURN;
         }
 
-        //Using a function on variable rotate will smooth out the slow values but still give full range
-//        if((smooth || isSlow) && rotate !=0) rotate = rotate * rotate * rotate/Math.abs(rotate);
 
-        rotate *= MAX_TURN;
+
+        /*
+        POLAR COORDINATES
+         */
 
         angle = Math.atan2(y, x);
+        angle += (HOLONOMIC_CORRECTION_ANGLE) + offsetAngle; //take our angle and shift it 90 deg (PI/4)
+        radius = Range.clip( Math.sqrt( (x * x) + (y * y) ), 0, 1);
+
+//        if (smooth || isSlow) radius = radius * radius; //Using a function on variable r will smooth out the slow values but still give full range
 
 
-        /* Gets the radius of our left joystick to vary our total speed
-        * Checks if r is greater than 1 (cannot assume joystick gives perfect circular values)
-        */
-        r = Math.sqrt( (x*x) + (y*y) );
-        if(r>1) r=1;
 
-        angle += (Math.PI/4) + offsetAngle + directionAngle;//take our angle and shift it 90 deg (PI/4)
-
-        if(smooth || isSlow) r = r*r; //Using a function on variable r will smooth out the slow values but still give full range
-
-
-        double SPEED = 1;
-        if(isSlow)
-            SPEED = SLOW_SPEED;
-
+        /*
+        NEW CARTESIAN VALUES
+         */
 
         /* Takes new angle and radius and converts them into the motor values
          * Multiples by our speed reduction ratio and our slow speed ratio
          */
+        double SLOW_SPEED_MULTIPLIER = isSlow ? SLOW_SPEED : 1;
+        double FAST_SPEED_MULTIPLIER = fastMode ? Math.sqrt(2) : 1;
 
-        double fastSpeed = fastMode ? Math.sqrt(2) : 1;
+        FL = BR = Math.sin(angle) * MAX_SPEED * radius * FAST_SPEED_MULTIPLIER * SLOW_SPEED_MULTIPLIER;
+        FR = BL = Math.cos(angle) * MAX_SPEED * radius * FAST_SPEED_MULTIPLIER * SLOW_SPEED_MULTIPLIER;
 
-        FL = BR = Math.sin(angle) * MAX_SPEED * r * fastSpeed;
-        FR = BL = Math.cos(angle) * MAX_SPEED * r * fastSpeed;
 
-        FL -= rotate; // implements rotation
-        FR -= rotate;
+
+        /*
+        ROTATION
+         */
+
+        rotate *= MAX_TURN;
+
+        FL += rotate;
+        FR += rotate;
         BL += rotate;
         BR += rotate;
 
 
-        /* Prevent fatal error cause by slightly imperfect joystick values
-         * Will drive in approximate direction if true
-         */
-        frontLeft.setPower( Range.clip(FL * SPEED, -1, 1)); // -rot fl br y
-        frontRight.setPower( Range.clip(FR * SPEED, -1, 1)); // -
-        backLeft.setPower( Range.clip(-BL * SPEED, -1, 1)); // +
-        backRight.setPower( Range.clip(-BR * SPEED, -1, 1)); //+
-
-        recordPosition();
-
-
-        /*
-        * Will drive in aproxamite direction if true
-
-        if(Math.abs(FL) >1 || Math.abs(FR) >1 ||
-                Math.abs(BR) >1 || Math.abs(BL) >1) {
-
-            FL /=  Math.abs(FL);
-            FR /=  Math.abs(FR);
-            BR /=  Math.abs(BR);
-            BL /=  Math.abs(BL);
-        }
-         */
-
-
-//        if (!silent) {
-//            telemetry.addData("OMNI_DRIVER: ", "radius: " + r);
-//            telemetry.addData("OMNI_DRIVER: ", "x: " + x);
-//            telemetry.addData("OMNI_DRIVER: ", "y: " + y);
-//            telemetry.addData("OMNI_DRIVER: ", "rotate: " + rotate);
-//            telemetry.addData("OMNI_DRIVER: ", "FL: " + frontLeft.getPower());
-//            telemetry.addData("OMNI_DRIVER: ", "FR: " + frontRight.getPower());
-//            telemetry.addData("OMNI_DRIVER: ", "BR: " + backRight.getPower());
-//            telemetry.addData("OMNI_DRIVER: ", "BL: " + backLeft.getPower());
-//            telemetry.update();
-//        }
-
-
+        setMotorPower(FL, FR, BL, BR);
+        recordDrivePosition();
 
     }
 
-
-    /*
-     * moves the robot based off of analogue inputs
-     * @param {double} x                The x value
-     * @param {double} y                The y value
-     * @param {double} rotation         The rotation value
-     * @param {double} [modifier]      The modifier for the power.
-     * @param {boolean} [smooth]        Whether or not to smooth the modifier
-     */
-
-    public void drive(double x, double y,double rotate){
+    public void drive(double x, double y, double rotate){
         this.drive(x, y, rotate, false);
-    }
-
-
-    /*
-       ENCODER METHODS
-     */
-
-    public void resetDriveEncoders(){
-       setDriveMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-       recordPosition();
-       setDriveMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     public void setDriveMode(DcMotor.RunMode runMode){
@@ -220,7 +196,13 @@ public class HolonomicDriver_11248 {
     }
 
 
-    public void recordPosition(){
+
+
+    /*
+    Encoder Methods
+     */
+
+    public void recordDrivePosition(){
 
         frontLeftRotations = frontLeft.getCurrentPosition();
         frontRightRotations = frontRight.getCurrentPosition();
@@ -228,46 +210,30 @@ public class HolonomicDriver_11248 {
         backRightRotations = backRight.getCurrentPosition();
     }
 
-    public void printDriveRotations(){
-        telemetry.addData("HOLONOMIC", "FL: " + frontLeftRotations);
-        telemetry.addData("HOLONOMIC", "FR: " + frontRightRotations);
-        telemetry.addData("HOLONOMIC", "BL: " + backLeftRotations);
-        telemetry.addData("HOLONOMIC", "BR: " + backRightRotations);
+    public void resetDriveEncoders(){
+       setDriveMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+       recordDrivePosition();
+       setDriveMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
+
 
     /*
-     * returns the value for isSlow
+    Mode Setters
      */
-    public boolean getIsSlow() {
-        return isSlow;
-    }
 
-    /*
-     * Sets the value for isSlow
-     */
-    public void setIsSlow(boolean isSlow) {
-        this.isSlow = isSlow;
-    }
-
-    /*
-     * Toggle isSlow
-     */
-    public void toggleSlow() {
-        isSlow = !isSlow;
-    }
-
-
-    public boolean isDriftModeOn(){
-        return isDrift;
+    public void setSlowMode(boolean on) {
+        this.isSlow = on;
     }
 
     public void setDriftMode(boolean on){
         isDrift = on;
+
         if (isDrift) {
             frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
             frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
             backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
             backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
         } else {
             frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -277,20 +243,50 @@ public class HolonomicDriver_11248 {
 
     }
 
+    public void setFastMode(boolean on){
+        fastMode = on;
+    }
+
+
+    /*
+    Mode Getters
+     */
+
+    public boolean isSlow() {
+        return isSlow;
+    }
+
+    public boolean isDrift(){
+        return isDrift;
+    }
+
+    public boolean isFast(){
+        return fastMode;
+    }
+
+
+    /*
+    Mode Toggles
+     */
+
+    public void toggleSlowMode() {
+        isSlow = !isSlow;
+    }
 
     public void toggleDriftMode(){
         isDrift = !isDrift;
         setDriftMode(isDrift);
     }
 
-    public void setFastMode(boolean isOn){
-        fastMode = isOn;
+    public void toggleFastMode(){
+        fastMode = !fastMode;
     }
 
+
     /*
-     * Sets the offset angle
-     * @param angle     the angle to offset by
+    Offset Angle
      */
+
     public void setOffsetAngle(double angle) {
         offsetAngle = angle;
     }
@@ -299,15 +295,54 @@ public class HolonomicDriver_11248 {
         return offsetAngle;
     }
 
-    public void setDirectionAngle(double angle){
-        directionAngle = angle;
-    }
 
     /*
-     * Set the telemetry to silent or not
-     * @param telemetry     whether or not to silence telemetry
+    Telemetry Methods
      */
-    public void turnTelemetryOn(boolean on) {
-        silent = !on;
+
+    public void printDriveModes(){
+        telemetry.addData(" ", " ");
+        telemetry.addData("Holo Driver", "isSlow: " + isSlow());
+        telemetry.addData("Holo Driver", "isDrift: " + isDrift());
+        telemetry.addData("Holo Driver", "isFast: " + isFast());
+    }
+
+    public void printDriveMotorPower(){
+        telemetry.addData(" ", " ");
+        telemetry.addData("Holo Driver", "FL Power: " + FL);
+        telemetry.addData("Holo Driver", "FR Power: " + FR);
+        telemetry.addData("Holo Driver", "BL Power: " + BL);
+        telemetry.addData("Holo Driver", "BR Power: " + BR);
+    }
+
+    public void printDriveXYRVals() {
+        telemetry.addData(" ", " ");
+        telemetry.addData("Holo Driver", "X: " + x);
+        telemetry.addData("Holo Driver", "Y: " + y);
+        telemetry.addData("Holo Driver", "Rotation: " + rot);
+    }
+
+    public void printDrivePolarVals() {
+        telemetry.addData(" ", " ");
+        telemetry.addData("Holo Driver", "Angle: " + angle);
+        telemetry.addData("Holo Driver", "Ofset Angle: " + offsetAngle);
+        telemetry.addData("Holo Driver", "Radius: " + radius);
+    }
+
+    public void printDriveRotations(){
+        telemetry.addData(" ", " ");
+        telemetry.addData("Holo Driver", "FL Rot: " + frontLeftRotations);
+        telemetry.addData("Holo Driver", "FR Rot: " + frontRightRotations);
+        telemetry.addData("Holo Driver", "BL Rot: " + backLeftRotations);
+        telemetry.addData("Holo Driver", "BR Rot: " + backRightRotations);
+    }
+
+    public void printDriveTelemetry(){
+        telemetry.addData(" ", " ");
+        printDriveModes();
+        printDriveXYRVals();
+        printDrivePolarVals();
+        printDriveRotations();
+        printDriveMotorPower();
     }
 }

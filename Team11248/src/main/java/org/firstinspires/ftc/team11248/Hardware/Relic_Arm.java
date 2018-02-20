@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.team11248.Hardware;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -15,6 +16,8 @@ public class Relic_Arm {
     }
 
     public Position state;
+
+    private int lastRotation = 0;
 
     private DcMotor motor;
     private Servo pivot, grab;
@@ -34,6 +37,8 @@ public class Relic_Arm {
     public Relic_Arm(String motor, String pivotServo, String grabServo, double[] pivotVal, double[] grabVal, HardwareMap hardwareMap, Telemetry telemetry){
 
         this.motor = hardwareMap.dcMotor.get(motor);
+        this.motor.setDirection(DcMotorSimple.Direction.REVERSE);
+
         this.pivot = hardwareMap.servo.get(pivotServo);
         this.grab = hardwareMap.servo.get(grabServo);
 
@@ -47,9 +52,16 @@ public class Relic_Arm {
         this.telemetry = telemetry;
     }
 
-    public void setPower(double power){
-        motor.setPower(power);
+    public void init(){
+        grab();
+        setDriftMode(false);
+        resetEncoders();
     }
+
+
+    /*
+    Servo Methods
+     */
 
     public void grab(){
         pivot.setPosition(down);
@@ -69,10 +81,58 @@ public class Relic_Arm {
         pivot.setPosition(up);
         grab.setPosition(closed);
 
-        state = Position.RELEASE;
+        state = Position.UP;
     }
 
-    public void printTelemetry(){
-        //Todo: log telemetry
+
+    /*
+    Motor Methods
+     */
+
+    public void setPower(double power){
+        motor.setPower(power);
+    }
+
+    public void setDriftMode(boolean on){
+        motor.setZeroPowerBehavior( on? DcMotor.ZeroPowerBehavior.FLOAT:DcMotor.ZeroPowerBehavior.BRAKE );
+    }
+
+    public void setMotorMode(DcMotor.RunMode runmode){
+        motor.setMode(runmode);
+    }
+
+
+    /*
+    Encoder Methods
+     */
+
+    public void recordPosition(){
+        lastRotation = motor.getCurrentPosition();
+    }
+
+    public void resetEncoders() {
+        setMotorMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        recordPosition();
+        setMotorMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
+    public int getCurrentPosition(){
+        recordPosition();
+        return lastRotation;
+    }
+
+    public int getLastPosition(){
+        return lastRotation;
+    }
+
+
+    /*
+    Telemetry Methods
+     */
+
+    public void printTelemetry() {
+        telemetry.addData(" ", " ");
+        telemetry.addData("Relic Arm", "State: " + state.toString());
+        telemetry.addData("Relic Arm", "Rotation: " + getCurrentPosition());
     }
 }
