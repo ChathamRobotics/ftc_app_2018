@@ -19,6 +19,8 @@ public class Claw {
         GRAB,
     }
 
+    public final int PICK_UP_GLYPH = 300; //TODO
+
     public Position topState;
     public Position bottomState;
     public String header;

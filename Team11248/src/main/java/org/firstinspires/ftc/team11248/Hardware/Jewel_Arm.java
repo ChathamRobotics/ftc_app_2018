@@ -13,14 +13,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Jewel_Arm {
 
-    public final int MAX_ENCODER_COUNT = 2000;
+    public final int MAX_ENCODER_COUNT = 2000;//TODO
 
-    private final int COLOR_THRESHOLD = 30;
-    private final int ENCODER_THRESHOLD = 5;
+    private final int COLOR_THRESHOLD = 30;//TODO
+    private final int ENCODER_THRESHOLD = 5; //TODO
 
     private int lastRotation = 0;
     public int rotationsToWall;
-    public final int BACK_UP_ROTATIONS = 0;
+    public final int BACK_UP_ROTATIONS = 200; //TODO
 
     public boolean redCache = false;
     public boolean blueCache = false;
@@ -117,7 +117,7 @@ public class Jewel_Arm {
         redBaseLine = colorSensor.red();
     }
 
-    public boolean isBlue(){
+    public boolean isBlue(){//could compaire base line to current blue
 
         double blue = Math.abs( colorSensor.blue() - blueBaseLine);
         double red =  Math.abs( colorSensor.red() - redBaseLine);
@@ -170,6 +170,8 @@ public class Jewel_Arm {
         redCache = false;
         blueCache = false;
         touchCache = false;
+        redBaseLine = 0;
+        blueBaseLine = 0;
     }
 
 

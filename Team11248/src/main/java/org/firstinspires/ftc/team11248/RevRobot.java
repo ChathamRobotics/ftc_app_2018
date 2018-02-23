@@ -19,6 +19,7 @@ import org.firstinspires.ftc.team11248.Hardware.Vuforia_V2;
 public class RevRobot extends HolonomicDriver_11248 {
 
     private final double GYRO_THRESHOLD = 5;
+    public double[] IMUBaseline = {0, 0, 0};
 
     /*
     CLAW
@@ -214,8 +215,15 @@ public class RevRobot extends HolonomicDriver_11248 {
         return lastAngles.thirdAngle;
     }
 
+    public void setIMUBaseline(){
+        recordAngles();
 
-    public boolean driveWithGyro(double x, double y, double targetAngle, boolean smooth) {
+        IMUBaseline[0] = lastAngles.firstAngle;
+        IMUBaseline[1] = lastAngles.secondAngle;
+        IMUBaseline[2] = lastAngles.thirdAngle;
+    }
+
+    public boolean driveWithGyro(double x, double y, double targetAngle, boolean smooth) { //TODO speed up
 
         boolean atAngle = false;
         double currentAngle = getCurrentHeading();
@@ -232,7 +240,7 @@ public class RevRobot extends HolonomicDriver_11248 {
 
         // slows down as approaches angle with min threshold of .05
         // each degree adds/subtracts .95/180 values of speed
-        rotation = Math.abs(net) * .85 / 180 + .10;
+        rotation = Math.abs(net) * .85 / 180 + .2;
 
         if (net < 0) rotation *= -1; //if going clockwise, set rotation clockwise (-)
 
@@ -280,7 +288,7 @@ public class RevRobot extends HolonomicDriver_11248 {
         return driveWithGyro(0,0, targetAngle);
     }
 
-    public boolean isAtAngle(char axis, double targetAngle) {
+    public boolean isAtAngle(char axis, double targetAngle, double threshold) {
 
         double currentAngle = 0;
 
@@ -298,9 +306,12 @@ public class RevRobot extends HolonomicDriver_11248 {
                 break;
         }
 
-        return currentAngle <= (targetAngle + GYRO_THRESHOLD) || (currentAngle - GYRO_THRESHOLD) >= targetAngle;
+        return currentAngle <= (targetAngle + threshold) || (currentAngle - threshold) >= targetAngle;
     }
 
+    public boolean isAtAngle(char axis, double targetAngle) {
+        return isAtAngle(axis, targetAngle, GYRO_THRESHOLD);
+    }
 
 
 

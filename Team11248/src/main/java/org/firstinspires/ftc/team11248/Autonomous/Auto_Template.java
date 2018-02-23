@@ -12,6 +12,8 @@ import org.firstinspires.ftc.team11248.RevRobot;
 
 public class Auto_Template extends LinearOpMode{
 
+    private final int STOP_DELAY = 500;
+
     private boolean isBlueAlliance;
 
     private RevRobot robot;
@@ -36,40 +38,50 @@ public class Auto_Template extends LinearOpMode{
         robot.vuforia.init(true,true);
         robot.vuforia.activateTracking();
 
+
         waitForStart();
+
+
+
+
+        robot.setIMUBaseline();
+        robot.relicArm.up();
+
+        claw.grabTop();
+        sleep(200); //wait for servo grab
 
         switch (state){
 
-            case 0: //Grab Glyph and start first jewelArm move
+            case 0: //Pick up Glyph and start first jewelArm move
 
-                claw.grabTop();
-                sleep(200);
                 claw.setPower(1);
-                sleep(375);
-                claw.setPower(0);
 
-                robot.jewelArm.setPower(1);
-                sleep(1000);
+                if(claw.getCurrentPosition() >= claw.PICK_UP_GLYPH){ //TODO: pick up glyph
+                    claw.setPower(0);
 
-                robot.jewelArm.setBaseLine();
+                    robot.jewelArm.setPower(1);
+                    sleep(1000);
+                    robot.jewelArm.setBaseLine();
+                    state++;
+                }
 
-                state++;
                 break;
-
 
 
             case 1: //Extend jewelArm till hits wall or maxes out
 
                 robot.jewelArm.setPower(.25);
 
-                if(robot.jewelArm.pressed() ){
+                if(robot.jewelArm.pressed() ){ //hits wall, record position and back up
                     robot.jewelArm.stop();
                     robot.jewelArm.rotationsToWall = robot.jewelArm.getCurrentPosition();
+                    sleep(STOP_DELAY);
                     state++;
                 }
 
-                if (robot.jewelArm.getCurrentPosition() >= robot.jewelArm.MAX_ENCODER_COUNT){
+                if (robot.jewelArm.getCurrentPosition() >= robot.jewelArm.MAX_ENCODER_COUNT){ // doesnt, stop and try and read color
                     robot.jewelArm.stop();
+                    sleep(STOP_DELAY);
                     state += 2;
                 }
                 break;
@@ -82,75 +94,107 @@ public class Auto_Template extends LinearOpMode{
 
                 if (robot.jewelArm.getCurrentPosition() <= targetPosition ){
                     robot.jewelArm.stop();
+                    sleep(STOP_DELAY);
                     state++;
                 }
 
                 break;
 
-            case 3: //Read jewel color
 
+            case 3: //Read jewel color
 
                 //if sees one, chck if its lft right
                 //if nothing go to state with moving the arm back in
 
-                boolean isLeftJewelRed = robot.jewelArm.isRed();
+                boolean isLeftJewelRed = robot.jewelArm.isRed();//TODO: test isBlue isRed
                 boolean isLeftJewelBlue = robot.jewelArm.isBlue();
 
                 if( !(isLeftJewelBlue == isLeftJewelRed) ) {
 
-                    robot.drive(0, .5 * ((isBlueAlliance?isLeftJewelRed:isLeftJewelBlue) ? 1 : -1), 0);
-                    sleep(500);
-                    robot.setDriftMode(true);
 
-                    robot.stop();
-                    robot.setDriftMode(false);
+                    if(isLeftJewelBlue){ //if in direction of cryptobox, drive off to hit jewel
+
+                        fallOffBuildPlate();
+                        state += 2;
 
 
-                    sleep(500);
+                    } else { //if in opposite, rotate to hit jewel
 
-                    if(isLeftJewelBlue){
-                        robot.drive(0,-1 * (isBlueAlliance?1:-1), 0);
-                        sleep(750);
-                        robot.stop();
-
-                    } else {
-                        robot.drive(0, isBlueAlliance?1:-1, 0);
-                        sleep(1500);
-
-                        robot.setDriftMode(true);
+                        robot.drive(0, 0, isBlueAlliance? -1 : 1);
                         sleep(500);
                         robot.stop();
-                        robot.setDriftMode(false);
 
+                        state++;
 
-                        robot.drive(0,-1 * (isBlueAlliance?1:-1), 0);
-                        sleep(750);
-                        robot.stop();
                     }
 
-                } else { // if doesnt sense anythig do park code
-
-                    sleep(500);
-                    robot.drive(0,-1 * (isBlueAlliance?1:-1), 0);
-                    sleep(1100);
-                    robot.stop();
-                }
-
+                } else state += 2; // if doesnt sense anything retract arm and continue
                 break;
 
-            case 4: //Retract jewelArm
+
+            case 4: // case to retract jewel arm rotate robot back and fall off build plate
+
+                robot.jewelArm.setPower(1);
+                if(robot.jewelArm.getCurrentPosition() <= 0){
+
+                    robot.jewelArm.stop();
+
+                    robot.drive(0, 0, isBlueAlliance? 1 : -1);
+                    sleep(500);
+                    robot.stop();
+                    
+                    fallOffBuildPlate();
+
+                    state += 2;
+                }
+                break;
+
+
+            case 5: //Retract jewelArm
 
                 robot.jewelArm.setPower(1);
                 if(robot.jewelArm.getCurrentPosition() <= 0){
                     robot.jewelArm.stop();
                     state++;
                 }
+                break;
+
+
+            case 6: //Drive off build plate till flat
+
+                robot.drive(0,-.5 * (isBlueAlliance?1:-1), 0);
+
+                if(robot.isAtAngle('Y', robot.IMUBaseline[1], 5)){ //TODO
+                    robot.stop();
+                    sleep(STOP_DELAY);
+                    state++;
+                }
+                break;
+
+
+            case 7:// align robot flat
+
+                if( robot.moveToAngle(robot.IMUBaseline[0]) )
 
                 break;
 
-            case 5: //
-                break;
+            case 8: //parking zone
 
+                robot.drive(0,-1 * (isBlueAlliance?1:-1), 0);
+                sleep(1100);
+                robot.stop();
+                break;
         }
+    }
+
+    void fallOffBuildPlate(){
+
+        robot.drive(0, .5 * (isBlueAlliance? -1 : 1), 0);
+        sleep(500);//to drive
+        robot.setDriftMode(true);
+
+        robot.stop();
+        sleep(500);//to fall
+        robot.setDriftMode(false);
     }
 }
