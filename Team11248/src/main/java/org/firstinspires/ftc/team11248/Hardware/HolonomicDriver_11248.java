@@ -77,7 +77,7 @@ public class HolonomicDriver_11248 {
         this.telemetry = telemetry;
 
         this.frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        this.backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
     }
 
@@ -175,8 +175,8 @@ public class HolonomicDriver_11248 {
 
         FL += rotate;
         FR += rotate;
-        BL += rotate;
-        BR += rotate;
+        BL -= rotate;
+        BR -= rotate;
 
 
         setMotorPower(FL, FR, BL, BR);

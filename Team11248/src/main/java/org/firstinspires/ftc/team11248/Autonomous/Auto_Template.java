@@ -29,8 +29,9 @@ public class Auto_Template extends LinearOpMode{
 
         robot = new RevRobot(hardwareMap, telemetry);
         robot.init();
+        robot.init_IMU();
 
-        claw = !isBlueAlliance ? robot.frontClaw : robot.backClaw;
+        claw = !isBlueAlliance ? robot.frontClaw : robot.backClaw; // with ! drags glyph (back claw)
 
         robot.vuforia.init(true,true);
         robot.vuforia.activateTracking();
@@ -50,6 +51,8 @@ public class Auto_Template extends LinearOpMode{
                 robot.jewelArm.setPower(1);
                 sleep(1000);
 
+                robot.jewelArm.setBaseLine();
+
                 state++;
                 break;
 
@@ -60,27 +63,89 @@ public class Auto_Template extends LinearOpMode{
                 robot.jewelArm.setPower(.25);
 
                 if(robot.jewelArm.pressed() ){
-                    robot.jewelArm.setPower(0);
+                    robot.jewelArm.stop();
+                    robot.jewelArm.rotationsToWall = robot.jewelArm.getCurrentPosition();
                     state++;
                 }
 
                 if (robot.jewelArm.getCurrentPosition() >= robot.jewelArm.MAX_ENCODER_COUNT){
-                    robot.jewelArm.setPower(0);
+                    robot.jewelArm.stop();
                     state += 2;
                 }
-
                 break;
 
 
             case 2: //Back up to read jewel
 
+                robot.jewelArm.setPower(-.25);
+                int targetPosition = robot.jewelArm.rotationsToWall - robot.jewelArm.BACK_UP_ROTATIONS;
+
+                if (robot.jewelArm.getCurrentPosition() <= targetPosition ){
+                    robot.jewelArm.stop();
+                    state++;
+                }
+
                 break;
 
             case 3: //Read jewel color
 
+
+                //if sees one, chck if its lft right
+                //if nothing go to state with moving the arm back in
+
+                boolean isLeftJewelRed = robot.jewelArm.isRed();
+                boolean isLeftJewelBlue = robot.jewelArm.isBlue();
+
+                if( !(isLeftJewelBlue == isLeftJewelRed) ) {
+
+                    robot.drive(0, .5 * ((isBlueAlliance?isLeftJewelRed:isLeftJewelBlue) ? 1 : -1), 0);
+                    sleep(500);
+                    robot.setDriftMode(true);
+
+                    robot.stop();
+                    robot.setDriftMode(false);
+
+
+                    sleep(500);
+
+                    if(isLeftJewelBlue){
+                        robot.drive(0,-1 * (isBlueAlliance?1:-1), 0);
+                        sleep(750);
+                        robot.stop();
+
+                    } else {
+                        robot.drive(0, isBlueAlliance?1:-1, 0);
+                        sleep(1500);
+
+                        robot.setDriftMode(true);
+                        sleep(500);
+                        robot.stop();
+                        robot.setDriftMode(false);
+
+
+                        robot.drive(0,-1 * (isBlueAlliance?1:-1), 0);
+                        sleep(750);
+                        robot.stop();
+                    }
+
+                } else { // if doesnt sense anythig do park code
+
+                    sleep(500);
+                    robot.drive(0,-1 * (isBlueAlliance?1:-1), 0);
+                    sleep(1100);
+                    robot.stop();
+                }
+
                 break;
 
             case 4: //Retract jewelArm
+
+                robot.jewelArm.setPower(1);
+                if(robot.jewelArm.getCurrentPosition() <= 0){
+                    robot.jewelArm.stop();
+                    state++;
+                }
+
                 break;
 
             case 5: //

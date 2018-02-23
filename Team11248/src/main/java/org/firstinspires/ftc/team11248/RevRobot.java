@@ -18,18 +18,25 @@ import org.firstinspires.ftc.team11248.Hardware.Vuforia_V2;
 
 public class RevRobot extends HolonomicDriver_11248 {
 
+    private final double GYRO_THRESHOLD = 5;
+
     /*
     CLAW
      */
 
     public Claw frontClaw, backClaw;
 
-    private final String[] frontClawNames = {"frontLift", "servo8", "servo10", "servo9", "servo7"};
-    private final String[] backClawNames = {"backLift", "servo10", "servo3", "servo11", "servo4"};
+    private final String[] frontClawNames = {"frontLift", "servo9", "servo7", "servo8", "servo10"};
+    private final String[] backClawNames = {"backLift", "servo3", "servo2", "servo4", "servo1"};
 
-    private final double[] release = {.675, .25, .625, .4};
-    private final double[] grab = {.55, .35, .45, .55};
-    private final double[] open = {.9, 0, .85, .2};
+    private final double[] frontRelease = {.45, .55, .6, .5};
+    private final double[] frontGrab = {.275, .575, .35, .625};
+    private final double[] frontOpen = {.55, .35, .7, .275};
+
+    private final double[] backRelease = {.45, .55, .6, .5};
+    private final double[] backGrab = {.275, .6, .35, .625};
+    private final double[] backOpen = {.55, .35, .725, .275};
+
 
 
     /*
@@ -64,6 +71,12 @@ public class RevRobot extends HolonomicDriver_11248 {
     public Vuforia_V2 vuforia;
 
 
+    /*
+    Telemetry
+     */
+
+    public Telemetry telemetry;
+
     public RevRobot(HardwareMap hardwareMap, Telemetry telemetry){
 
         /*
@@ -79,8 +92,8 @@ public class RevRobot extends HolonomicDriver_11248 {
         CLAW
          */
 
-        this.frontClaw = new Claw("Front", frontClawNames, open, release, grab, hardwareMap, telemetry);
-        this.backClaw = new Claw("Back", backClawNames, open, release, grab, hardwareMap, telemetry);
+        this.frontClaw = new Claw("Front", frontClawNames, frontOpen, frontRelease, frontGrab, hardwareMap, telemetry);
+        this.backClaw = new Claw("Back", backClawNames, backOpen, backRelease, backGrab, hardwareMap, telemetry);
 
 
         /*
@@ -109,6 +122,13 @@ public class RevRobot extends HolonomicDriver_11248 {
          */
         vuforia = new Vuforia_V2(hardwareMap);
 
+
+        /*
+        Telemetry
+         */
+
+        this.telemetry = telemetry;
+
     }
 
 
@@ -135,6 +155,7 @@ public class RevRobot extends HolonomicDriver_11248 {
     public void printTelemetry(){
         printSensorTelemetry();
         super.printDriveTelemetry();
+        telemetry.update();
     }
 
 
@@ -193,10 +214,98 @@ public class RevRobot extends HolonomicDriver_11248 {
         return lastAngles.thirdAngle;
     }
 
-    public boolean moveToAngle(double heading){ //TODO: add moveToAngle, isAtAngle, isAtHeading/Roll/Pitch
+
+    public boolean driveWithGyro(double x, double y, double targetAngle, boolean smooth) {
+
+        boolean atAngle = false;
+        double currentAngle = getCurrentHeading();
+        double net = currentAngle - targetAngle; //finds distance to target angle
+        double rotation;
+
+        if (Math.abs(net) > 180) { // if shortest path passes 0
+            if (currentAngle > 180) //if going counterclockwise
+                net = (currentAngle - 360) - targetAngle;
+
+            else //if going clockwise
+                net = (360 - targetAngle) + currentAngle;
+        }
+
+        // slows down as approaches angle with min threshold of .05
+        // each degree adds/subtracts .95/180 values of speed
+        rotation = Math.abs(net) * .85 / 180 + .10;
+
+        if (net < 0) rotation *= -1; //if going clockwise, set rotation clockwise (-)
+
+        if (!(Math.abs(net) > GYRO_THRESHOLD)){
+            atAngle = true;
+            rotation = 0;
+        }
+
+        driveWithFixedAngle(x, y, rotation, 360 - getCurrentHeading() + targetAngle, smooth); //Drive with gyros rotation
+
+        telemetry.addData("driveWithGyro", "Heading: " + getCurrentHeading());
+        telemetry.addData("driveWithGyro", "Net: " + net);
+        telemetry.addData("driveWithGyro", "Speed: " + rotation);
+        telemetry.addData("driveWithGyro", "Target: " + targetAngle);
+        telemetry.addData("driveWithGyro", "atAngle: " + atAngle);
 
 
-        return true;
+        return atAngle;
     }
+
+    public boolean driveWithGyro(double x, double y, double targetAngle) {
+        return driveWithGyro(x, y, targetAngle, false);
+    }
+
+
+    /**
+     *
+     * @param x - x direction power
+     * @param y - y direction power
+     * @param rotate - power for rotation
+     * @param fixedAngle -  angle orentation is fixed on - set = to 359 - getGyroAngle()
+     */
+
+    public void driveWithFixedAngle(double x, double y, double rotate, double fixedAngle, boolean smooth){
+
+        setOffsetAngle((Math.toRadians(fixedAngle)));
+        drive(x, y, rotate, smooth);
+    }
+
+    public void driveWithFixedAngle(double x, double y, double rotate, double fixedAngle) {
+        driveWithFixedAngle(x, y, rotate, fixedAngle, false);
+    }
+
+    public boolean moveToAngle(double targetAngle){
+        return driveWithGyro(0,0, targetAngle);
+    }
+
+    public boolean isAtAngle(char axis, double targetAngle) {
+
+        double currentAngle = 0;
+
+        switch (axis) {
+            case 'X':
+                currentAngle = getCurrentPitch();
+                break;
+
+            case 'Y':
+                currentAngle = getCurrentRoll();
+                break;
+
+            case 'Z':
+                currentAngle = getCurrentHeading();
+                break;
+        }
+
+        return currentAngle <= (targetAngle + GYRO_THRESHOLD) || (currentAngle - GYRO_THRESHOLD) >= targetAngle;
+    }
+
+
+
+
+
+    //TODO: add moveToAngle, isAtAngle, isAtHeading/Roll/Pitch
+
 
 }

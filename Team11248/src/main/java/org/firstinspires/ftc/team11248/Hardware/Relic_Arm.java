@@ -93,6 +93,8 @@ public class Relic_Arm {
         motor.setPower(power);
     }
 
+    public void stop() { setPower(0); }
+
     public void setDriftMode(boolean on){
         motor.setZeroPowerBehavior( on? DcMotor.ZeroPowerBehavior.FLOAT:DcMotor.ZeroPowerBehavior.BRAKE );
     }

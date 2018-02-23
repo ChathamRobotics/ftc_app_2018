@@ -69,7 +69,6 @@ public class Teleop extends OpMode {
 
 
 
-
         /*
          *              GAMEPAD 1
          */
@@ -97,7 +96,7 @@ public class Teleop extends OpMode {
 
         if(gamepad1.b && !prevGP1.b){ //Bottom
 
-            if(GP1_Claw.topState == Claw.Position.OPEN) GP1_Claw.grabBottom(); // Grab if open (Can go from closed to grab)
+            if(GP1_Claw.bottomState == Claw.Position.OPEN) GP1_Claw.grabBottom(); // Grab if open (Can go from closed to grab)
             else GP1_Claw.openBottom(); // if claw is closed or grabbed then open
         }
 
@@ -141,7 +140,7 @@ public class Teleop extends OpMode {
         Passive Claw
          */
 
-        GP2_Claw.setPower(gamepad2.left_stick_y);
+        GP2_Claw.setPower(-gamepad2.left_stick_y);
 
         if(gamepad2.dpad_down && !prevGP2.dpad_down){
 

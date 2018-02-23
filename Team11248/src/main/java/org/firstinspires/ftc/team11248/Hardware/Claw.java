@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.team11248.Hardware;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -44,6 +45,7 @@ public class Claw {
         this.grab = grab;
 
         this.motor = hardwareMap.dcMotor.get(motorServoNames[0]);
+        this.motor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         this.tl = hardwareMap.servo.get(motorServoNames[1]);
         this.tr = hardwareMap.servo.get(motorServoNames[2]);
@@ -145,6 +147,8 @@ public class Claw {
     public void setPower(double power){
         motor.setPower(power);
     }
+
+    public void stop() { setPower(0); }
 
     public void setDriftMode(boolean on){
         motor.setZeroPowerBehavior( on? DcMotor.ZeroPowerBehavior.FLOAT:DcMotor.ZeroPowerBehavior.BRAKE );
