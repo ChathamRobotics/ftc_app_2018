@@ -24,8 +24,8 @@ public class HolonomicDriver_11248 {
     public static final double BACK_OFFSET = Math.PI;
     public static final double RIGHT_OFFSET = 3 * Math.PI / 2;
 
-    public static final double MAX_TURN = .7;
-    public static final double MAX_SPEED = .3;
+    public static final double MAX_TURN = .5;
+    public static final double MAX_SPEED = .5;
     public static final double SLOW_SPEED = .4;
 
 
@@ -55,7 +55,7 @@ public class HolonomicDriver_11248 {
     private double FL, FR, BL, BR;
     private double x, y, rot;
     private double angle, radius;
-    private double offsetAngle;
+    private double offsetAngle, directionAngle;
 
 
 
@@ -145,7 +145,7 @@ public class HolonomicDriver_11248 {
          */
 
         angle = Math.atan2(y, x);
-        angle += (HOLONOMIC_CORRECTION_ANGLE) + offsetAngle; //take our angle and shift it 90 deg (PI/4)
+        angle += (HOLONOMIC_CORRECTION_ANGLE) + offsetAngle + directionAngle; //take our angle and shift it 90 deg (PI/4)
         radius = Range.clip( Math.sqrt( (x * x) + (y * y) ), 0, 1);
 
 //        if (smooth || isSlow) radius = radius * radius; //Using a function on variable r will smooth out the slow values but still give full range
@@ -295,6 +295,14 @@ public class HolonomicDriver_11248 {
         return offsetAngle;
     }
 
+
+    public void setDirectionAngle(double angle) {
+        directionAngle = angle;
+    }
+
+    public double getDirectionAngle() {
+        return directionAngle;
+    }
 
     /*
     Telemetry Methods

@@ -64,9 +64,17 @@ public class Teleop extends OpMode {
             robot.backClaw.open();
             robot.frontClaw.release();
 
-        }
+        } else if (gamepad1.dpad_left) {
+            robot.setOffsetAngle(HolonomicDriver_11248.LEFT_OFFSET);
+            robot.backClaw.open();
+            robot.frontClaw.release();
 
+        } else if (gamepad1.dpad_right) {
+                robot.setOffsetAngle(HolonomicDriver_11248.RIGHT_OFFSET);
+                robot.backClaw.open();
+                robot.frontClaw.release();
 
+                }
 
 
         /*
