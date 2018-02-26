@@ -45,7 +45,7 @@ public class Teleop extends OpMode {
     @Override
     public void loop() {
 
-        robot.printTelemetry();
+//        robot.printTelemetry();
 
         /*
         Direction Swap

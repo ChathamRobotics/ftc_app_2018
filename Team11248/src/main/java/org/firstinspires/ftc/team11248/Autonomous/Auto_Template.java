@@ -12,7 +12,7 @@ import org.firstinspires.ftc.team11248.RevRobot;
 
 public class Auto_Template extends LinearOpMode{
 
-    private final int STOP_DELAY = 500;
+    private final int STOP_DELAY = 2000;
 
     private boolean isBlueAlliance;
 
@@ -35,13 +35,11 @@ public class Auto_Template extends LinearOpMode{
 
         claw = !isBlueAlliance ? robot.frontClaw : robot.backClaw; // with ! drags glyph (back claw)
 
-        robot.vuforia.init(true,true);
+        robot.vuforia.init(true, true);
         robot.vuforia.activateTracking();
 
 
         waitForStart();
-
-
 
 
         robot.setIMUBaseline();
@@ -50,140 +48,164 @@ public class Auto_Template extends LinearOpMode{
         claw.grabTop();
         sleep(200); //wait for servo grab
 
-        switch (state){
 
-            case 0: //Pick up Glyph and start first jewelArm move
+        while (opModeIsActive() && !isStopRequested()) {
 
-                claw.setPower(1);
+            telemetry.addData("Auto", "State: " + state);
+            robot.printTelemetry();
+            telemetry.update();
 
-                if(claw.getCurrentPosition() >= claw.PICK_UP_GLYPH){ //TODO: pick up glyph
-                    claw.setPower(0);
+            switch (state) {
 
-                    robot.jewelArm.setPower(1);
-                    sleep(1000);
-                    robot.jewelArm.setBaseLine();
-                    state++;
-                }
+                case 0: //Pick up Glyph and start first jewelArm move
 
-                break;
+                    claw.setPower(1);
 
+                    if (claw.getCurrentPosition() >= claw.PICK_UP_GLYPH) { //TODO: pick up glyph
+                        claw.stop();
 
-            case 1: //Extend jewelArm till hits wall or maxes out
+                        robot.jewelArm.setPower(1);
+                        sleep(250);
+                        robot.jewelArm.stop();
+                        sleep(STOP_DELAY);
+                        robot.jewelArm.setBaseLine();
 
-                robot.jewelArm.setPower(.25);
+                        state++;
+                    }
 
-                if(robot.jewelArm.pressed() ){ //hits wall, record position and back up
-                    robot.jewelArm.stop();
-                    robot.jewelArm.rotationsToWall = robot.jewelArm.getCurrentPosition();
-                    sleep(STOP_DELAY);
-                    state++;
-                }
-
-                if (robot.jewelArm.getCurrentPosition() >= robot.jewelArm.MAX_ENCODER_COUNT){ // doesnt, stop and try and read color
-                    robot.jewelArm.stop();
-                    sleep(STOP_DELAY);
-                    state += 2;
-                }
-                break;
+                    break;
 
 
-            case 2: //Back up to read jewel
+                case 1: //Extend jewelArm till hits wall or maxes out
 
-                robot.jewelArm.setPower(-.25);
-                int targetPosition = robot.jewelArm.rotationsToWall - robot.jewelArm.BACK_UP_ROTATIONS;
+                    robot.jewelArm.setPower(.35);
 
-                if (robot.jewelArm.getCurrentPosition() <= targetPosition ){
-                    robot.jewelArm.stop();
-                    sleep(STOP_DELAY);
-                    state++;
-                }
-
-                break;
-
-
-            case 3: //Read jewel color
-
-                //if sees one, chck if its lft right
-                //if nothing go to state with moving the arm back in
-
-                boolean isLeftJewelRed = robot.jewelArm.isRed();//TODO: test isBlue isRed
-                boolean isLeftJewelBlue = robot.jewelArm.isBlue();
-
-                if( !(isLeftJewelBlue == isLeftJewelRed) ) {
-
-
-                    if(isLeftJewelBlue){ //if in direction of cryptobox, drive off to hit jewel
-
-                        fallOffBuildPlate();
+                    if (robot.jewelArm.pressed()) { //hits wall, record position and back up
+                        robot.jewelArm.stop();
+                        robot.jewelArm.rotationsToWall = robot.jewelArm.getCurrentPosition();
+                        sleep(STOP_DELAY);
+                        state++;
+                    } else if (robot.jewelArm.getCurrentPosition() >= robot.jewelArm.MAX_ENCODER_COUNT) { // doesnt, stop and try and read color
+                        robot.jewelArm.stop();
+                        sleep(STOP_DELAY);
                         state += 2;
+                    }
+                    break;
 
 
-                    } else { //if in opposite, rotate to hit jewel
+                case 2: //Back up to read jewel
 
-                        robot.drive(0, 0, isBlueAlliance? -1 : 1);
-                        sleep(500);
+                    robot.jewelArm.setPower(-.35);
+                    int targetPosition = robot.jewelArm.rotationsToWall - robot.jewelArm.BACK_UP_ROTATIONS;
+
+                    if (robot.jewelArm.getCurrentPosition() <= targetPosition) {
+                        robot.jewelArm.stop();
+                        sleep(STOP_DELAY);
+                        state++;
+                    }
+
+                    break;
+
+
+                case 3: //Read jewel color
+
+                    //if sees one, chck if its lft right
+                    //if nothing go to state with moving the arm back in
+
+                    boolean isLeftJewelRed = robot.jewelArm.isRed();//TODO: test isBlue isRed
+                    boolean isLeftJewelBlue = robot.jewelArm.isBlue();
+
+                    if (!(isLeftJewelBlue == isLeftJewelRed)) {
+
+
+                        if (isLeftJewelBlue) { //if in direction of cryptobox, drive off to hit jewel
+
+                            fallOffBuildPlate();
+                            state += 2;
+
+
+                        } else { //if in opposite, rotate to hit jewel
+
+                            robot.drive(0, 0, isBlueAlliance ? -.5 : 5);
+                            sleep(200);
+                            robot.stop();
+
+                            state++;
+
+                        }
+
+                    } else {
+                        fallOffBuildPlate();
+                        state += 2; // if doesnt sense anything retract arm and continue
+                    }
+                    break;
+
+
+                case 4: // case to retract jewel arm rotate robot back and fall off build plate
+
+                    robot.jewelArm.setPower(-1);
+                    if (robot.jewelArm.getCurrentPosition() <= 0) {
+
+                        robot.jewelArm.stop();
+
+                        robot.drive(0, 0, isBlueAlliance ? .5 : -.5);
+                        sleep(200);
                         robot.stop();
 
+                        fallOffBuildPlate();
+
+                        state += 2;
+                    }
+                    break;
+
+
+                case 5: //Retract jewelArm
+
+                    robot.jewelArm.setPower(-1);
+                    if (robot.jewelArm.getCurrentPosition() <= 0) {
+                        robot.jewelArm.stop();
+                        state++;
+                    }
+                    break;
+
+
+                case 6: //Drive off build plate till flat
+
+                    robot.drive(0, -.5 * (isBlueAlliance ? 1 : -1), 0);
+
+                    if (robot.isAtAngle('Y', robot.IMUBaseline[1], 5)) { //TODO
+                        robot.stop();
+                        sleep(STOP_DELAY);
+                        state++;
+                    }
+                    break;
+
+                case 7:
+
+                    if(robot.moveToAngle(robot.IMUBaseline[0] - 30 *(isBlueAlliance?1:-1))){
                         state++;
 
                     }
-
-                } else state += 2; // if doesnt sense anything retract arm and continue
-                break;
+                    break;
 
 
-            case 4: // case to retract jewel arm rotate robot back and fall off build plate
+                case 8:// align robot angle
 
-                robot.jewelArm.setPower(1);
-                if(robot.jewelArm.getCurrentPosition() <= 0){
+//                    if (robot.moveToAngle(robot.IMUBaseline[0])) state++;
+//                    break;
 
-                    robot.jewelArm.stop();
+//                case 8: //parking zone
 
-                    robot.drive(0, 0, isBlueAlliance? 1 : -1);
-                    sleep(500);
-                    robot.stop();
-                    
-                    fallOffBuildPlate();
-
-                    state += 2;
-                }
-                break;
-
-
-            case 5: //Retract jewelArm
-
-                robot.jewelArm.setPower(1);
-                if(robot.jewelArm.getCurrentPosition() <= 0){
-                    robot.jewelArm.stop();
-                    state++;
-                }
-                break;
-
-
-            case 6: //Drive off build plate till flat
-
-                robot.drive(0,-.5 * (isBlueAlliance?1:-1), 0);
-
-                if(robot.isAtAngle('Y', robot.IMUBaseline[1], 5)){ //TODO
-                    robot.stop();
-                    sleep(STOP_DELAY);
-                    state++;
-                }
-                break;
-
-
-            case 7:// align robot flat
-
-                if( robot.moveToAngle(robot.IMUBaseline[0]) )
-
-                break;
-
-            case 8: //parking zone
-
-                robot.drive(0,-1 * (isBlueAlliance?1:-1), 0);
-                sleep(1100);
+                robot.drive(0, -1 * (isBlueAlliance ? 1 : -1), 0);
+                sleep(1000);
                 robot.stop();
+                claw.open();
+                robot.drive(0, .5 * (isBlueAlliance ? 1 : -1), 0);
+                sleep(500);
+                robot.stop();
+                state++;
                 break;
+            }
         }
     }
 

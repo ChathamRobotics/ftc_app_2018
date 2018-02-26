@@ -30,13 +30,23 @@ public class RevRobot extends HolonomicDriver_11248 {
     private final String[] frontClawNames = {"frontLift", "servo9", "servo7", "servo8", "servo10"};
     private final String[] backClawNames = {"backLift", "servo3", "servo2", "servo4", "servo1"};
 
+//    private final double[] frontRelease = {.45, .55, .6, .5};
+//    private final double[] frontGrab = {.275, .575, .35, .625};
+//    private final double[] frontOpen = {.55, .35, .7, .275};
+//
+//    private final double[] backRelease = {.45, .55, .6, .5};
+//    private final double[] backGrab = {.275, .6, .35, .625};
+//    private final double[] backOpen = {.55, .35, .725, .275};
+
+
     private final double[] frontRelease = {.45, .55, .6, .5};
-    private final double[] frontGrab = {.275, .575, .35, .625};
-    private final double[] frontOpen = {.55, .35, .7, .275};
+    private final double[] frontGrab = {.2, .625, .3, .65};
+    private final double[] frontOpen = {.6, .30, .7, .275};
 
     private final double[] backRelease = {.45, .55, .6, .5};
-    private final double[] backGrab = {.275, .6, .35, .625};
-    private final double[] backOpen = {.55, .35, .725, .275};
+    private final double[] backGrab = {.2, .625, .3, .65};
+    private final double[] backOpen = {.60, .33, .725, .25};
+
 
 
 
@@ -240,7 +250,7 @@ public class RevRobot extends HolonomicDriver_11248 {
 
         // slows down as approaches angle with min threshold of .05
         // each degree adds/subtracts .95/180 values of speed
-        rotation = Math.abs(net) * .85 / 180 + .2;
+        rotation = Math.abs(net) * .6 / 180 + .4;
 
         if (net < 0) rotation *= -1; //if going clockwise, set rotation clockwise (-)
 

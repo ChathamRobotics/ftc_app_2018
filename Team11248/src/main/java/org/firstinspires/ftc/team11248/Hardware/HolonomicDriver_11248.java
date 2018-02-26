@@ -24,9 +24,9 @@ public class HolonomicDriver_11248 {
     public static final double BACK_OFFSET = Math.PI;
     public static final double RIGHT_OFFSET = 3 * Math.PI / 2;
 
-    public static final double MAX_TURN = .5;
+    public static final double MAX_TURN = .8;
     public static final double MAX_SPEED = .5;
-    public static final double SLOW_SPEED = .4;
+    public static final double SLOW_SPEED = .5;
 
 
     /*
@@ -159,11 +159,11 @@ public class HolonomicDriver_11248 {
         /* Takes new angle and radius and converts them into the motor values
          * Multiples by our speed reduction ratio and our slow speed ratio
          */
-        double SLOW_SPEED_MULTIPLIER = isSlow ? SLOW_SPEED : 1;
+        double SLOW_SPEED_ROTATION_MULTIPLIER = isSlow ? SLOW_SPEED : 1;
         double FAST_SPEED_MULTIPLIER = fastMode ? Math.sqrt(2) : 1;
 
-        FL = BR = Math.sin(angle) * MAX_SPEED * radius * FAST_SPEED_MULTIPLIER * SLOW_SPEED_MULTIPLIER;
-        FR = BL = Math.cos(angle) * MAX_SPEED * radius * FAST_SPEED_MULTIPLIER * SLOW_SPEED_MULTIPLIER;
+        FL = BR = Math.sin(angle) * MAX_SPEED * radius * FAST_SPEED_MULTIPLIER;
+        FR = BL = Math.cos(angle) * MAX_SPEED * radius * FAST_SPEED_MULTIPLIER ;
 
 
 
@@ -172,6 +172,7 @@ public class HolonomicDriver_11248 {
          */
 
         rotate *= MAX_TURN;
+        rotate *= SLOW_SPEED_ROTATION_MULTIPLIER;
 
         FL += rotate;
         FR += rotate;
