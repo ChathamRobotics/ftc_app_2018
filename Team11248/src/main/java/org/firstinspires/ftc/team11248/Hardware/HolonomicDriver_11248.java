@@ -354,4 +354,8 @@ public class HolonomicDriver_11248 {
         printDriveRotations();
         printDriveMotorPower();
     }
+
+    public void printDriveCompTelemetry(){
+        printDriveModes();
+    }
 }

@@ -70,7 +70,7 @@ public class Claw {
 
     public void openTop(){
 
-        if(bottomState == Position.OPEN || bottomState == Position.RELEASE) openBottom();
+        if(bottomState == Position.RELEASE || bottomState == Position.GRAB) openBottom();
 
         tl.setPosition(open[0]);
         tr.setPosition(open[1]);
@@ -195,6 +195,12 @@ public class Claw {
         telemetry.addData(header + "Top Claw", "Top State: "+ topState.toString());
         telemetry.addData(header + "Bottom Claw", "Bottom State: "+ bottomState.toString());
         telemetry.addData(header + " Claw", "Rotation: " + getCurrentPosition());
+    }
+
+    public void printCompTelemetry(){
+        telemetry.addData(" ", " ");
+        telemetry.addData(header + "Top Claw", "Top State: "+ topState.toString());
+        telemetry.addData(header + "Bottom Claw", "Bottom State: "+ bottomState.toString());
     }
 
 }

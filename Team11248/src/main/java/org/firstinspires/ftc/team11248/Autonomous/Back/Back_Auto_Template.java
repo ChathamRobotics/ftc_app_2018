@@ -1,7 +1,6 @@
-package org.firstinspires.ftc.team11248.Autonomous;
+package org.firstinspires.ftc.team11248.Autonomous.Back;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.team11248.Hardware.Claw;
 import org.firstinspires.ftc.team11248.RevRobot;
@@ -10,7 +9,7 @@ import org.firstinspires.ftc.team11248.RevRobot;
  * Created by tonytesoriero on 2/19/18.
  */
 
-public class Auto_Template extends LinearOpMode{
+public class Back_Auto_Template extends LinearOpMode{
 
     private final int STOP_DELAY = 2000;
 
@@ -21,7 +20,7 @@ public class Auto_Template extends LinearOpMode{
 
     private int state = 0;
 
-    Auto_Template(boolean isBlueAlliance){
+    Back_Auto_Template(boolean isBlueAlliance){
         this.isBlueAlliance = isBlueAlliance;
 
     }

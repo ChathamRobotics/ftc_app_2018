@@ -1,15 +1,13 @@
-package org.firstinspires.ftc.team11248.Autonomous;
+package org.firstinspires.ftc.team11248.Autonomous.Back;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-
-import org.firstinspires.ftc.team11248.Autonomous.Auto_Template;
 
 /**
  * Created by Tony_Air on 11/28/17.
  */
 @Autonomous(name = "Jewel Red")
 
-public class Auto_Red extends Auto_Template {
+public class Auto_Red extends Back_Auto_Template {
     public Auto_Red() {
         super(false);
     }

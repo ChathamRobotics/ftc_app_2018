@@ -18,6 +18,8 @@ import org.firstinspires.ftc.team11248.RevRobot;
 @TeleOp(name="Drive")
 public class Teleop extends OpMode {
 
+    private final boolean IS_COMP = false;
+
     RevRobot robot;
     private Gamepad prevGP1, prevGP2;
 
@@ -26,6 +28,7 @@ public class Teleop extends OpMode {
 
         robot = new RevRobot(hardwareMap, telemetry);
         robot.init();
+        robot.relicArm.up();
 
         prevGP1 = new Gamepad();
         prevGP2 = new Gamepad();
@@ -45,7 +48,8 @@ public class Teleop extends OpMode {
     @Override
     public void loop() {
 
-//        robot.printTelemetry();
+        if(IS_COMP) robot.printCompTelemetry();
+        else robot.printTelemetry();
 
         /*
         Direction Swap
@@ -74,7 +78,8 @@ public class Teleop extends OpMode {
                 robot.backClaw.open();
                 robot.frontClaw.release();
 
-                }
+        }
+
 
 
         /*
@@ -142,6 +147,13 @@ public class Teleop extends OpMode {
         else robot.relicArm.setPower(0);
 
 
+        /*
+        Jewel Arm
+         */
+
+        if(gamepad2.right_bumper) robot.jewelArm.setPower(1);
+        else if (gamepad2.left_bumper) robot.jewelArm.setPower(-1);
+        else robot.jewelArm.setPower(0);
 
 
         /*
@@ -163,45 +175,9 @@ public class Teleop extends OpMode {
 
 
 
-
-
-
-//        // Front lift controls
-//
-//        if (frontLiftGamepad.a && !frontLiftGamepadPrev.a) {
-//
-//            if (robot.frontClaw.state == Claw.Position.OPEN) // Grab if open (Can go from closed to grab)
-//                robot.frontClaw.grab();
-//
-//            else  // if claw is closed or grabbed then open
-//                robot.frontClaw.open();
-//        }
-//
-//        if (frontLiftGamepad.b && !frontLiftGamepadPrev.b){
-//            robot.frontClaw.grabTop();
-//        }
-//
-//        if (frontLiftGamepad.x && !frontLiftGamepadPrev.x)
-//            if (robot.frontClaw.state == Claw.Position.RELEASE) {
-//                robot.frontClaw.open();
-//
-//            } else {  // if claw is open or grabbed then close
-//                robot.frontClaw.release();
-//            }
-//
-//        //Sets arm motor to whatever right trigger is
-//        if (frontLiftGamepad.right_trigger > 0)
-//            robot.frontClaw.setPower(frontLiftGamepad.right_trigger);
-//        else if (frontLiftGamepad.left_trigger > 0)
-//            robot.frontClaw.setPower(-frontLiftGamepad.left_trigger);
-//        else
-//            robot.frontClaw.setPower(0);
-
-
-
-
-
-            //Recaptures all previous values of Gamepad 1 for debouncing
+        /*
+            Recapture all previous values from Gamepads for debouncing
+         */
         try {
             prevGP1.copy(gamepad1);
         } catch (RobotCoreException e1) {

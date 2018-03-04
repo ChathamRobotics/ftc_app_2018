@@ -161,12 +161,21 @@ public class RevRobot extends HolonomicDriver_11248 {
         backClaw.printTelemetry();
         relicArm.printTelemetry();
         jewelArm.printTelemetry();
+        telemetry.update();
     }
 
     public void printTelemetry(){
-        printSensorTelemetry();
+        frontClaw.printTelemetry();
+        backClaw.printTelemetry();
+        relicArm.printTelemetry();
+        jewelArm.printTelemetry();
         super.printDriveTelemetry();
         telemetry.update();
+    }
+
+    public void printCompTelemetry(){
+        super.printDriveCompTelemetry();
+
     }
 
 
