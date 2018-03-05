@@ -17,7 +17,7 @@ public class HolonomicDriver_11248 {
     Constants
      */
 
-    public static final double HOLONOMIC_CORRECTION_ANGLE = Math.PI/4;
+    public static final double HOLONOMIC_CORRECTION_ANGLE = -Math.PI/4;
 
     public static final double FRONT_OFFSET = 0;
     public static final double LEFT_OFFSET = Math.PI/2;
@@ -25,7 +25,7 @@ public class HolonomicDriver_11248 {
     public static final double RIGHT_OFFSET = 3 * Math.PI / 2;
 
     public static final double MAX_TURN = .8;
-    public static final double MAX_SPEED = .5;
+    public static final double MAX_SPEED = .2;
     public static final double SLOW_SPEED = .5;
 
 
@@ -55,7 +55,7 @@ public class HolonomicDriver_11248 {
     private double FL, FR, BL, BR;
     private double x, y, rot;
     private double angle, radius;
-    private double offsetAngle, directionAngle;
+    private double offsetAngle;
 
 
 
@@ -77,7 +77,7 @@ public class HolonomicDriver_11248 {
         this.telemetry = telemetry;
 
         this.frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        this.frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
     }
 
@@ -130,7 +130,7 @@ public class HolonomicDriver_11248 {
         double MAX_TURN, MAX_SPEED;
 
         if (smooth) {
-            MAX_TURN = Math.abs(rotate) * HolonomicDriver_11248.MAX_TURN;
+            MAX_TURN = Math.abs(rot) * HolonomicDriver_11248.MAX_TURN;
             MAX_SPEED = 1 - MAX_TURN;
 
         } else {
@@ -145,7 +145,7 @@ public class HolonomicDriver_11248 {
          */
 
         angle = Math.atan2(y, x);
-        angle += (HOLONOMIC_CORRECTION_ANGLE) + offsetAngle + directionAngle; //take our angle and shift it 90 deg (PI/4)
+        angle += (HOLONOMIC_CORRECTION_ANGLE) + offsetAngle; //take our angle and shift it 90 deg (PI/4)
         radius = Range.clip( Math.sqrt( (x * x) + (y * y) ), 0, 1);
 
 //        if (smooth || isSlow) radius = radius * radius; //Using a function on variable r will smooth out the slow values but still give full range
@@ -162,8 +162,8 @@ public class HolonomicDriver_11248 {
         double SLOW_SPEED_ROTATION_MULTIPLIER = isSlow ? SLOW_SPEED : 1;
         double FAST_SPEED_MULTIPLIER = fastMode ? Math.sqrt(2) : 1;
 
-        FL = BR = Math.sin(angle) * MAX_SPEED * radius * FAST_SPEED_MULTIPLIER;
-        FR = BL = Math.cos(angle) * MAX_SPEED * radius * FAST_SPEED_MULTIPLIER ;
+        FL = BR = x = Math.cos(angle) * MAX_SPEED * radius * FAST_SPEED_MULTIPLIER;
+        FR = BL = y = Math.sin(angle) * MAX_SPEED * radius * FAST_SPEED_MULTIPLIER;
 
 
 
@@ -171,13 +171,12 @@ public class HolonomicDriver_11248 {
         ROTATION
          */
 
-        rotate *= MAX_TURN;
-        rotate *= SLOW_SPEED_ROTATION_MULTIPLIER;
+        rot *= MAX_TURN * SLOW_SPEED_ROTATION_MULTIPLIER;
 
-        FL += rotate;
-        FR += rotate;
-        BL -= rotate;
-        BR -= rotate;
+        FL += rot;
+        BL += rot;
+        FR -= rot;
+        BR -= rot;
 
 
         setMotorPower(FL, FR, BL, BR);
@@ -186,7 +185,7 @@ public class HolonomicDriver_11248 {
     }
 
     public void drive(double x, double y, double rotate){
-        this.drive(x, y, rotate, false);
+        this.drive(x, y, rotate, true);
     }
 
     public void setDriveMode(DcMotor.RunMode runMode){
@@ -215,6 +214,21 @@ public class HolonomicDriver_11248 {
        setDriveMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
        recordDrivePosition();
        setDriveMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
+    public int getCurrentPosition(){
+        recordDrivePosition();
+        return getLastPosition();
+    }
+
+    public int getLastPosition(){
+
+        int smallestRotations = smallestInt(frontLeftRotations, frontRightRotations, backLeftRotations, backRightRotations);
+        return frontLeftRotations;
+    }
+
+    private int smallestInt(int a, int b, int c, int d){
+        return (a>b && a>c) ? ( (a>d)?a:d ) : ( (b>c && b>d) ? b: (c>d)?c:d );
     }
 
 
@@ -297,13 +311,6 @@ public class HolonomicDriver_11248 {
     }
 
 
-    public void setDirectionAngle(double angle) {
-        directionAngle = angle;
-    }
-
-    public double getDirectionAngle() {
-        return directionAngle;
-    }
 
     /*
     Telemetry Methods
@@ -334,7 +341,7 @@ public class HolonomicDriver_11248 {
     public void printDrivePolarVals() {
         telemetry.addData(" ", " ");
         telemetry.addData("Holo Driver", "Angle: " + angle);
-        telemetry.addData("Holo Driver", "Ofset Angle: " + offsetAngle);
+        telemetry.addData("Holo Driver", "Offset Angle: " + offsetAngle);
         telemetry.addData("Holo Driver", "Radius: " + radius);
     }
 

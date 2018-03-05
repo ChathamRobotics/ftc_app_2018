@@ -10,6 +10,9 @@ import org.firstinspires.ftc.team11248.Hardware.Claw;
 import org.firstinspires.ftc.team11248.Hardware.HolonomicDriver_11248;
 import org.firstinspires.ftc.team11248.RevRobot;
 
+import static org.firstinspires.ftc.team11248.Teleop.Teleop.ENCODER_THRESHOLD;
+import static org.firstinspires.ftc.team11248.Teleop.Teleop.killed;
+
 /**
  * Created by Tony_Air on 11/6/17.
  */
@@ -18,10 +21,15 @@ import org.firstinspires.ftc.team11248.RevRobot;
 @TeleOp(name="Drive")
 public class Teleop extends OpMode {
 
+    public static final int ENCODER_THRESHOLD = 50;
+    public static volatile boolean killed = false;
+
     private final boolean IS_COMP = false;
 
     RevRobot robot;
     private Gamepad prevGP1, prevGP2;
+
+    Thread raiseLiftUp1, raiseLiftsToBalance;
 
     @Override
     public void init() {
@@ -41,6 +49,8 @@ public class Teleop extends OpMode {
         }
 
         robot.setOffsetAngle(0);
+        robot.jewelArm.enableColorLed(false);
+
     }
 
 
@@ -68,17 +78,8 @@ public class Teleop extends OpMode {
             robot.backClaw.open();
             robot.frontClaw.release();
 
-        } else if (gamepad1.dpad_left) {
-            robot.setOffsetAngle(HolonomicDriver_11248.LEFT_OFFSET);
-            robot.backClaw.open();
-            robot.frontClaw.release();
-
-        } else if (gamepad1.dpad_right) {
-                robot.setOffsetAngle(HolonomicDriver_11248.RIGHT_OFFSET);
-                robot.backClaw.open();
-                robot.frontClaw.release();
-
-        }
+        } else if (gamepad1.dpad_left) robot.setOffsetAngle(HolonomicDriver_11248.LEFT_OFFSET); // not used
+        else if (gamepad1.dpad_right) robot.setOffsetAngle(HolonomicDriver_11248.RIGHT_OFFSET);
 
 
 
@@ -127,6 +128,20 @@ public class Teleop extends OpMode {
         if(gamepad1.y && !prevGP1.y) robot.toggleSlowMode();
 
 
+        if(gamepad1.left_bumper && !prevGP1.left_bumper) {
+            
+            Thread moveActiveLiftUp1 = new MoveLift(GP1_Claw, Claw.UP1);
+            new Thread(moveActiveLiftUp1).start();
+
+        }
+
+         /*
+        Balancing Stone
+         */
+
+        //start raises both lifts to balance height in thread
+
+
 
 
         /*
@@ -170,7 +185,11 @@ public class Teleop extends OpMode {
         }
 
 
+        /*
+        Balancing Stone
+         */
 
+        //x raises both lifts to balance height in thread
 
 
 
@@ -190,6 +209,67 @@ public class Teleop extends OpMode {
             e1.printStackTrace();
         }
     }
+
+    @Override
+    public void stop() {
+        killed = true;
+    }
 }
 
+//class RaiseLiftsToBalance extends Thread{
+//
+//    private Claw frontClaw, backClaw;
+//
+//    RaiseLiftsToBalance(Claw frontClaw, Claw backClaw){
+//        this.frontClaw = frontClaw;
+//        this.backClaw = backClaw;
+//    }
+//
+//    @Override
+//    public void run() {
+//
+//        while (!isInterrupted() && !killed &&
+//                frontClaw.getCurrentPosition() >= Claw.UP_BALANCE &&
+//                backClaw.getCurrentPosition() >= Claw.UP_BALANCE) {
+//
+//            if(frontClaw.getCurrentPosition() <= Claw.UP_BALANCE) frontClaw.setPower(0);
+//            else frontClaw.setPower(1);
+//
+//            if(backClaw.getCurrentPosition() <= Claw.UP_BALANCE) backClaw.setPower(0);
+//            else backClaw.setPower(1);
+//
+//        }
+//    }
+//}
+
+
+class MoveLift extends Thread{
+
+    private Claw claw;
+    private int targetPosition;
+
+    MoveLift(Claw claw, int targetPosition){
+       this.claw = claw;
+       this.targetPosition = targetPosition;
+    }
+
+    private boolean isAtPosition() {
+
+        int currentPos = Math.abs(claw.getCurrentPosition());
+        return currentPos <= (targetPosition + ENCODER_THRESHOLD) || (currentPos - ENCODER_THRESHOLD) >= targetPosition;
+    }
+
+    @Override
+    public void run() {
+
+        while (!isInterrupted() && !killed && !isAtPosition()){
+
+            int currentPos = claw.getCurrentPosition();
+            int distToTarget = targetPosition - currentPos + currentPos<0?Math.abs(currentPos):0 ;
+
+            claw.setPower( .75 * distToTarget/(Claw.MAX_ENCODER_COUNT/2) + .25 * distToTarget/Math.abs(distToTarget) );
+
+        }
+    }
+}
 

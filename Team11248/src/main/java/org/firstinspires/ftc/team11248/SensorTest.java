@@ -39,7 +39,9 @@ public class SensorTest extends OpMode{
         if(gamepad1.a){
             robot.resetEncoders();
             robot.jewelArm.resetCache();
+            robot.jewelArm.setBaseLine();
             robot.vuforia.resetCache();
+            robot.setIMUBaseline();
         }
 
     }

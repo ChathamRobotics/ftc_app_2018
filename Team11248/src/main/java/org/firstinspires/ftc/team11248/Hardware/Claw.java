@@ -19,7 +19,10 @@ public class Claw {
         GRAB,
     }
 
-    public final int PICK_UP_GLYPH = 150; //TODO
+    public static final int PICK_UP_GLYPH = 300;
+    public static final int UP1 = 800; //value to align for 2 glyph pickup
+    public static final int UP_BALANCE = 1400; //value to lift above balancing stone
+    public static final int MAX_ENCODER_COUNT = 3400; // max extention
 
     public Position topState;
     public Position bottomState;

@@ -119,25 +119,26 @@ public class Jewel_Arm {
 
     public boolean isBlue(){//could compaire base line to current blue
 
-        double blue = Math.abs( colorSensor.blue() - blueBaseLine);
-        double red =  Math.abs( colorSensor.red() - redBaseLine);
+        double delta_blue = Math.abs( colorSensor.blue() - blueBaseLine);
+        double delta_red =  Math.abs( colorSensor.red() - redBaseLine);
 
-        blueCache = (blue > (red + COLOR_THRESHOLD));
+        blueCache = (delta_blue > (delta_red + COLOR_THRESHOLD));
         return blueCache;
     }
 
     public boolean isRed(){
 
-        double blue = Math.abs( colorSensor.blue() - blueBaseLine);
-        double red =  Math.abs( colorSensor.red() - redBaseLine);
+        double delta_blue = Math.abs( colorSensor.blue() - blueBaseLine);
+        double delta_red =  Math.abs( colorSensor.red() - redBaseLine);
 
-        redCache = ((blue + COLOR_THRESHOLD) < red);
+        redCache = ((delta_blue + COLOR_THRESHOLD) < delta_red);
         return redCache;
     }
 
     public void enableColorLed(boolean on){
         colorSensor.enableLed(on);
     }
+
 
     /*
     Distance Methods
@@ -165,6 +166,12 @@ public class Jewel_Arm {
     /*
     Cache Methods
      */
+
+    public void updateCache(){
+        isBlue();
+        isRed();
+        pressed();
+    }
 
     public void resetCache(){
         redCache = false;

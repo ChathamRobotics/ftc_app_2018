@@ -21,6 +21,7 @@ public class RevRobot extends HolonomicDriver_11248 {
     private final double GYRO_THRESHOLD = 5;
     public double[] IMUBaseline = {0, 0, 0};
 
+
     /*
     CLAW
      */
@@ -30,24 +31,19 @@ public class RevRobot extends HolonomicDriver_11248 {
     private final String[] frontClawNames = {"frontLift", "servo9", "servo7", "servo8", "servo10"};
     private final String[] backClawNames = {"backLift", "servo3", "servo2", "servo4", "servo1"};
 
+
+//    private final double[] frontOpen = {.5, .30, .65, .275};
 //    private final double[] frontRelease = {.45, .55, .6, .5};
-//    private final double[] frontGrab = {.275, .575, .35, .625};
-//    private final double[] frontOpen = {.55, .35, .7, .275};
-//
-//    private final double[] backRelease = {.45, .55, .6, .5};
-//    private final double[] backGrab = {.275, .6, .35, .625};
-//    private final double[] backOpen = {.55, .35, .725, .275};
+//    private final double[] frontGrab = {.2, .625, .3, .65};
+
+    private final double[] frontOpen = {.55, .3, .675, .275};
+    private final double[] frontRelease = {.35, .5, .425, .525};
+    private final double[] frontGrab = {.2, .675, .275, .7};
 
 
-    private final double[] frontRelease = {.45, .55, .6, .5};
-    private final double[] frontGrab = {.2, .625, .3, .65};
-    private final double[] frontOpen = {.6, .30, .7, .275};
-
-    private final double[] backRelease = {.45, .55, .6, .5};
-    private final double[] backGrab = {.2, .625, .3, .65};
-    private final double[] backOpen = {.60, .33, .725, .25};
-
-
+    private final double[] backOpen = {.60, .325, .725, .265};
+    private final double[] backRelease = {.38, .525, .5, .5};
+    private final double[] backGrab = {.25, .675, .35, .65};
 
 
     /*
@@ -56,7 +52,7 @@ public class RevRobot extends HolonomicDriver_11248 {
 
     public Relic_Arm relicArm;
     private final double[] pivotVal = {1, 0, 0};
-    private final double[] grabVal = {1, .44};
+    private final double[] grabVal = {1, .445};
 
 
     /*
@@ -74,6 +70,7 @@ public class RevRobot extends HolonomicDriver_11248 {
     BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
 
     Orientation lastAngles;
+
 
     /*
     VUFORIA
@@ -156,6 +153,14 @@ public class RevRobot extends HolonomicDriver_11248 {
     Telemetry
      */
 
+    public void printIMUTelemetry(){
+        telemetry.addData("", "" );
+        telemetry.addData("IMU", "Heading: "  + getCurrentHeading());
+        telemetry.addData("IMU", "Heading: "  + getCurrentHeading());
+        telemetry.addData("IMU", "Heading: "  + getCurrentHeading());
+
+    }
+
     public void printSensorTelemetry(){
         frontClaw.printTelemetry();
         backClaw.printTelemetry();
@@ -175,7 +180,13 @@ public class RevRobot extends HolonomicDriver_11248 {
 
     public void printCompTelemetry(){
         super.printDriveCompTelemetry();
+        telemetry.update();
+    }
 
+    public void printAutoTelemetry() { //No telemetry.update(); --- handled in opmode
+        frontClaw.printTelemetry();
+        backClaw.printTelemetry();
+        jewelArm.printTelemetry();
     }
 
 
@@ -216,33 +227,35 @@ public class RevRobot extends HolonomicDriver_11248 {
     }
 
     private void recordAngles(){
-        lastAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYX, AngleUnit.DEGREES);
+        lastAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
     }
 
     public double getCurrentPitch(){
         recordAngles();
-        return lastAngles.firstAngle;
+        return lastAngles.firstAngle < 0 ? 360 + lastAngles.firstAngle: lastAngles.firstAngle;
     }
 
     public double getCurrentRoll(){
         recordAngles();
-        return lastAngles.secondAngle;
+        return lastAngles.firstAngle < 0 ? 360 + lastAngles.firstAngle: lastAngles.firstAngle;
     }
 
     public double getCurrentHeading(){
         recordAngles();
-        return lastAngles.thirdAngle;
+        return lastAngles.firstAngle < 0 ? 360 + lastAngles.firstAngle: lastAngles.firstAngle;
     }
 
     public void setIMUBaseline(){
         recordAngles();
 
-        IMUBaseline[0] = lastAngles.firstAngle;
-        IMUBaseline[1] = lastAngles.secondAngle;
-        IMUBaseline[2] = lastAngles.thirdAngle;
+        IMUBaseline[0] = getCurrentPitch();
+        IMUBaseline[1] = getCurrentRoll();
+        IMUBaseline[2] = getCurrentHeading();
     }
 
     public boolean driveWithGyro(double x, double y, double targetAngle, boolean smooth) { //TODO speed up
+
+        targetAngle %= 360;
 
         boolean atAngle = false;
         double currentAngle = getCurrentHeading();
@@ -259,7 +272,7 @@ public class RevRobot extends HolonomicDriver_11248 {
 
         // slows down as approaches angle with min threshold of .05
         // each degree adds/subtracts .95/180 values of speed
-        rotation = Math.abs(net) * .6 / 180 + .4;
+        rotation = Math.abs(net) * .7 / 180 + .3;
 
         if (net < 0) rotation *= -1; //if going clockwise, set rotation clockwise (-)
 
@@ -331,11 +344,6 @@ public class RevRobot extends HolonomicDriver_11248 {
     public boolean isAtAngle(char axis, double targetAngle) {
         return isAtAngle(axis, targetAngle, GYRO_THRESHOLD);
     }
-
-
-
-
-    //TODO: add moveToAngle, isAtAngle, isAtHeading/Roll/Pitch
 
 
 }

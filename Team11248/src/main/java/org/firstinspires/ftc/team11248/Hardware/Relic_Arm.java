@@ -17,6 +17,9 @@ public class Relic_Arm {
 
     public Position state;
 
+    public final int MAX_ENCODER_COUNT = 6400;
+    private final int ENCODER_THRESHOLD = 5;
+
     private int lastRotation = 0;
 
     private DcMotor motor;

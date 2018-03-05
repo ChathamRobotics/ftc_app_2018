@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
  * Created by Tony_Air on 11/28/17.
  */
 
-@Autonomous(name = "Jewel Blue")
+@Autonomous(name = "Front Blue")
 
 public class Auto_Blue extends Front_Auto_Template {
     public Auto_Blue(){
