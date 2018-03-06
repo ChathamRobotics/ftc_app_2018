@@ -163,6 +163,10 @@ public class Claw {
         motor.setMode(runmode);
     }
 
+    public void setTargetPosition(int targetPosition){
+        motor.setTargetPosition(targetPosition);
+    }
+
 
     /*
     Encoder Methods

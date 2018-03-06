@@ -162,6 +162,7 @@ public class RevRobot extends HolonomicDriver_11248 {
     }
 
     public void printSensorTelemetry(){
+        printIMUTelemetry();
         frontClaw.printTelemetry();
         backClaw.printTelemetry();
         relicArm.printTelemetry();
@@ -184,6 +185,7 @@ public class RevRobot extends HolonomicDriver_11248 {
     }
 
     public void printAutoTelemetry() { //No telemetry.update(); --- handled in opmode
+        printIMUTelemetry();
         frontClaw.printTelemetry();
         backClaw.printTelemetry();
         jewelArm.printTelemetry();

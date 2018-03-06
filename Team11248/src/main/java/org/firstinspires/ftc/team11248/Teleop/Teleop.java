@@ -129,9 +129,9 @@ public class Teleop extends OpMode {
 
 
         if(gamepad1.left_bumper && !prevGP1.left_bumper) {
-            
-            Thread moveActiveLiftUp1 = new MoveLift(GP1_Claw, Claw.UP1);
-            new Thread(moveActiveLiftUp1).start();
+
+//            Thread moveActiveLiftUp1 = new MoveLift(GP1_Claw, Claw.UP1);
+//            new Thread(moveActiveLiftUp1).start();
 
         }
 
@@ -184,12 +184,11 @@ public class Teleop extends OpMode {
 
         }
 
-
         /*
         Balancing Stone
          */
 
-        //x raises both lifts to balance height in thread
+        //start raises both lifts to balance height in thread
 
 
 
@@ -262,14 +261,20 @@ class MoveLift extends Thread{
     @Override
     public void run() {
 
-        while (!isInterrupted() && !killed && !isAtPosition()){
+        claw.setMotorMode(DcMotor.RunMode.RUN_TO_POSITION);
+        claw.setTargetPosition(targetPosition);
 
-            int currentPos = claw.getCurrentPosition();
-            int distToTarget = targetPosition - currentPos + currentPos<0?Math.abs(currentPos):0 ;
+        int currentPos = claw.getCurrentPosition();
+        int distToTarget = targetPosition - currentPos + currentPos<0?Math.abs(currentPos):0;
 
-            claw.setPower( .75 * distToTarget/(Claw.MAX_ENCODER_COUNT/2) + .25 * distToTarget/Math.abs(distToTarget) );
+        claw.setPower( distToTarget/Math.abs(distToTarget) ); //-1 or 1
 
-        }
+        while (!isInterrupted() && !killed && !isAtPosition());
+
+        claw.setMotorMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        // claw.setPower( .75 * distToTarget/(Claw.MAX_ENCODER_COUNT/2) + .25 * distToTarget/Math.abs(distToTarget) );
+
     }
 }
 
