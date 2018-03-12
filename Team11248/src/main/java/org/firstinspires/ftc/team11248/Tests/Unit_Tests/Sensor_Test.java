@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.team11248;
+package org.firstinspires.ftc.team11248.Tests.Unit_Tests;
 
 /**
  * Created by tonytesoriero on 2/19/18.
@@ -7,15 +7,17 @@ package org.firstinspires.ftc.team11248;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.team11248.RevRobot;
+
 @TeleOp(name = "Sensor Test")
-public class SensorTest extends OpMode{
+public class Sensor_Test extends OpMode{
 
     RevRobot robot;
 
     @Override
     public void init() {
         robot = new RevRobot(hardwareMap, telemetry);
-        robot.init();
+        robot.safe_init();
 
         robot.setDriftMode(true);
         robot.jewelArm.setDriftMode(true);
@@ -29,20 +31,27 @@ public class SensorTest extends OpMode{
     @Override
     public void start(){
         robot.vuforia.activateTracking();
+        robot.imu.setBaseline();
     }
 
     @Override
     public void loop() {
-        telemetry.addData("Vuforia", "VuMark: " + robot.vuforia.getLastImage().toString());
-        robot.printTelemetry();
+        robot.printSensorTelemetry();
 
         if(gamepad1.a){
             robot.resetEncoders();
             robot.jewelArm.resetCache();
             robot.jewelArm.setBaseLine();
             robot.vuforia.resetCache();
-            robot.setIMUBaseline();
+            robot.imu.setBaseline();
         }
 
     }
+
+    @Override
+    public void stop(){
+        robot.imu.stop();
+        robot.vuforia.deactivateTracking();
+    }
+
 }

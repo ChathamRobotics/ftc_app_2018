@@ -3,6 +3,7 @@ package org.firstinspires.ftc.team11248.Hardware;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -22,21 +23,28 @@ import org.firstinspires.ftc.team11248.Old_Files.Robot11248;
 
 public class Vuforia_V2 {
 
-    HardwareMap hardwareMap;
+    private HardwareMap hardwareMap;
+    private Telemetry telemetry;
+
     public static final String vuforiaKey = "AeTwV0H/////AAAAGfe7ayWmjE9+nI9k65aoO+NQIIujZBIX8AxeoVDf9bwLLNvQ6QwvM+Clc3CE/8Pumv5guDuXMxkERpyJTzSb50PcrH9y/lJC9Zfh0FlPVkkvDnZVNsPEIEsg0Ta5oDlz1jIZmSB/Oxu2qRAyo4jXIsWSmDMdQdpNrwkyKbLfl/CT7PWe23RAdF8oQf5XqnSbKoapQali8MH4+HPOR8r13/k+cZv9eKqUvknmxZPiyJbp4oFzqrWDJSUqwTGQLEdbp76Hjrkuxu3Pa/I4jQSt3RRRbAUrZeV1Z79cLKg+22SvrhUKKzwxeEMcgp4rQzrMXhTL+wE+6sBczuguHmPtWA5w/NsUlevRaLbEionbyXYN";
 
-    VuforiaLocalizer vuforia;
-    VuforiaTrackables relicTrackables;
-    VuforiaTrackable relicTemplate;
-    RelicRecoveryVuMark lastVuMark = RelicRecoveryVuMark.UNKNOWN;
+    private VuforiaLocalizer vuforia;
+    private VuforiaTrackables relicTrackables;
+    private VuforiaTrackable relicTemplate;
+
+    private RelicRecoveryVuMark lastVuMark = RelicRecoveryVuMark.UNKNOWN;
+    private RelicRecoveryVuMark currentVuMark;
+    boolean isVisible;
+
 
     OpenGLMatrix pose;
 
     private double[] lastPosition = {0, 0, 0};
     private double[] lastRotation = {0, 0, 0};
 
-    public Vuforia_V2(HardwareMap hardwareMap){
+    public Vuforia_V2(HardwareMap hardwareMap, Telemetry telemetry){
         this.hardwareMap = hardwareMap;
+        this.telemetry = telemetry;
     }
 
 
@@ -64,7 +72,7 @@ public class Vuforia_V2 {
             parameters = new VuforiaLocalizer.Parameters();
         }
 
-        parameters.vuforiaLicenseKey = Robot11248.vuforiaKey;
+        parameters.vuforiaLicenseKey = Vuforia_V2.vuforiaKey;
 
         parameters.cameraDirection = frontCamera?VuforiaLocalizer.CameraDirection.FRONT:VuforiaLocalizer.CameraDirection.BACK;
         this.vuforia = ClassFactory.createVuforiaLocalizer(parameters);
@@ -88,13 +96,27 @@ public class Vuforia_V2 {
     }
 
     public RelicRecoveryVuMark getLastImage(){
-
-        RelicRecoveryVuMark vuMark = RelicRecoveryVuMark.from(this.relicTemplate);
-
-        if(vuMark != RelicRecoveryVuMark.UNKNOWN) this.lastVuMark = vuMark;
-
+        update();
         return lastVuMark;
     }
+
+   public RelicRecoveryVuMark getCurrentImage(){
+       update();
+       return currentVuMark;
+
+   }
+
+   public boolean isVisible(){
+       update();
+       return isVisible;
+   }
+
+   public void update(){
+       currentVuMark = RelicRecoveryVuMark.from(this.relicTemplate);
+       if(currentVuMark != RelicRecoveryVuMark.UNKNOWN) this.lastVuMark = currentVuMark;
+
+       isVisible = (currentVuMark == lastVuMark && currentVuMark != RelicRecoveryVuMark.UNKNOWN);
+   }
 
 
     /*
@@ -136,9 +158,10 @@ public class Vuforia_V2 {
 
     }
 
-
     public void resetCache(){
         lastVuMark = RelicRecoveryVuMark.UNKNOWN;
+        currentVuMark = RelicRecoveryVuMark.UNKNOWN;
+        isVisible = false;
 
         lastPosition[0] = 0;
         lastPosition[1] = 0;
@@ -148,5 +171,37 @@ public class Vuforia_V2 {
         lastRotation[1] = 0;
         lastRotation[2] = 0;
     }
+
+
+    /*
+    Telemetry
+     */
+
+    public void printPositionTelemetry(){
+
+    }
+
+    public void printRotationTelemetry(){
+
+    }
+
+    public void printVuMarkTelemetry(){
+
+    }
+
+    public void printAutoTelemetry() {
+
+        telemetry.addData("VuForia", "Last VuMark: " + getLastImage().toString());
+        telemetry.addData("VuForia","Current VuMark: " + getCurrentImage().toString());
+        telemetry.addData("VuForia","Visible: " + isVisible());
+    }
+
+    public void printTelemetry(){
+        printAutoTelemetry();
+        telemetry.addData("VuForia","Position: { " + getPosition()[0] + ", " + getPosition()[1] + ", " + getPosition()[2] +" }");
+        telemetry.addData("VuForia","Rotation: { " + getRotation()[0] + ", " + getRotation()[1] + ", " + getRotation()[2] +" }" );
+    }
+
+
 
 }

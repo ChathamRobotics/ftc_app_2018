@@ -19,13 +19,14 @@ public class Claw {
         GRAB,
     }
 
-    public static final int PICK_UP_GLYPH = 300;
-    public static final int UP1 = 800; //value to align for 2 glyph pickup
-    public static final int UP_BALANCE = 1400; //value to lift above balancing stone
-    public static final int MAX_ENCODER_COUNT = 3400; // max extention
+    public static final int PICK_UP_GLYPH = 700;//value to pick up one glyph
+    public static final int UP1 = 1200; //value to align for 2 glyph pickup
+    public static final int UP_BALANCE = 1800; //value to lift above balancing stone
+    public static final int MAX_ENCODER_COUNT = 3800; // max extension
 
     public Position topState;
     public Position bottomState;
+    public DcMotor.RunMode runMode;
     public String header;
     private double[] open, grab, release;
     private int lastRotation = 0;
@@ -144,7 +145,6 @@ public class Claw {
     }
 
 
-
     /*
     Motor Methods
      */
@@ -160,11 +160,22 @@ public class Claw {
     }
 
     public void setMotorMode(DcMotor.RunMode runmode){
-        motor.setMode(runmode);
+        this.runMode = runmode;
+        motor.setMode(runMode);
     }
 
     public void setTargetPosition(int targetPosition){
         motor.setTargetPosition(targetPosition);
+    }
+
+    public void moveToPosition(int targetPosition, double power){
+        setMotorMode(DcMotor.RunMode.RUN_TO_POSITION);
+        setTargetPosition(targetPosition);
+        setPower(power);
+    }
+
+    public void moveToPosition(int targetPosition){
+        moveToPosition(targetPosition, 1);
     }
 
 

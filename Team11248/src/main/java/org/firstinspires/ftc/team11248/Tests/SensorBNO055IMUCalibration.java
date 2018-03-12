@@ -106,10 +106,10 @@ public class SensorBNO055IMUCalibration extends LinearOpMode
     //----------------------------------------------------------------------------------------------
 
     // Our sensors, motors, and other devices go here, along with other long term state
-    BNO055IMU imu;
+    BNO055IMU imu1, imu2;
 
     // State used for updating telemetry
-    Orientation angles;
+    Orientation angles1, angles2;
 
     //----------------------------------------------------------------------------------------------
     // Main logic
@@ -117,7 +117,7 @@ public class SensorBNO055IMUCalibration extends LinearOpMode
 
     @Override public void runOpMode() {
 
-        telemetry.log().setCapacity(12);
+      //  telemetry.log().setCapacity(12);
         telemetry.log().add("");
         telemetry.log().add("Please refer to the calibration instructions");
         telemetry.log().add("contained in the Adafruit IMU calibration");
@@ -132,8 +132,15 @@ public class SensorBNO055IMUCalibration extends LinearOpMode
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.loggingEnabled = true;
         parameters.loggingTag     = "IMU";
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-        imu.initialize(parameters);
+        imu1 = hardwareMap.get(BNO055IMU.class, "imu");
+        imu1.initialize(parameters);
+
+
+        BNO055IMU.Parameters parameters2 = new BNO055IMU.Parameters();
+        parameters2.loggingEnabled = true;
+        parameters2.loggingTag     = "IMU2";
+        imu2 = hardwareMap.get(BNO055IMU.class, "imu2");
+        imu2.initialize(parameters2);
 
         composeTelemetry();
         telemetry.log().add("Waiting for start...");
@@ -151,17 +158,28 @@ public class SensorBNO055IMUCalibration extends LinearOpMode
             if (gamepad1.a) {
 
                 // Get the calibration data
-                BNO055IMU.CalibrationData calibrationData = imu.readCalibrationData();
+                BNO055IMU.CalibrationData calibrationData1 = imu1.readCalibrationData();
+                BNO055IMU.CalibrationData calibrationData2 = imu2.readCalibrationData();
 
                 // Save the calibration data to a file. You can choose whatever file
                 // name you wish here, but you'll want to indicate the same file name
                 // when you initialize the IMU in an opmode in which it is used. If you
                 // have more than one IMU on your robot, you'll of course want to use
                 // different configuration file names for each.
-                String filename = "AdafruitIMUCalibration.json";
+                String filename = "BNO055IMUCalibration.json";
                 File file = AppUtil.getInstance().getSettingsFile(filename);
-                ReadWriteFile.writeFile(file, calibrationData.serialize());
+                ReadWriteFile.writeFile(file, calibrationData1.serialize());
                 telemetry.log().add("saved to '%s'", filename);
+
+                // Save the calibration data to a file. You can choose whatever file
+                // name you wish here, but you'll want to indicate the same file name
+                // when you initialize the IMU in an opmode in which it is used. If you
+                // have more than one IMU on your robot, you'll of course want to use
+                // different configuration file names for each.
+                String filename2 = "BNO055IMUCalibration2.json";
+                File file2 = AppUtil.getInstance().getSettingsFile(filename2);
+                ReadWriteFile.writeFile(file2, calibrationData2.serialize());
+                telemetry.log().add("saved to '%s'", filename2);
 
                 // Wait for the button to be released
                 while (gamepad1.a) {
@@ -183,36 +201,68 @@ public class SensorBNO055IMUCalibration extends LinearOpMode
                 // Acquiring the angles is relatively expensive; we don't want
                 // to do that in each of the three items that need that info, as that's
                 // three times the necessary expense.
-                angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+                angles1   = imu1.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+                angles2   = imu2.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+
                 }
             });
 
         telemetry.addLine()
             .addData("status", new Func<String>() {
                 @Override public String value() {
-                    return imu.getSystemStatus().toShortString();
+                    return imu1.getSystemStatus().toShortString();
                     }
                 })
             .addData("calib", new Func<String>() {
                 @Override public String value() {
-                    return imu.getCalibrationStatus().toString();
+                    return imu1.getCalibrationStatus().toString();
                     }
                 });
 
         telemetry.addLine()
             .addData("heading", new Func<String>() {
                 @Override public String value() {
-                    return formatAngle(angles.angleUnit, angles.firstAngle);
+                    return formatAngle(angles1.angleUnit, angles1.firstAngle);
                     }
                 })
             .addData("roll", new Func<String>() {
                 @Override public String value() {
-                    return formatAngle(angles.angleUnit, angles.secondAngle);
+                    return formatAngle(angles1.angleUnit, angles1.secondAngle);
                     }
                 })
             .addData("pitch", new Func<String>() {
                 @Override public String value() {
-                    return formatAngle(angles.angleUnit, angles.thirdAngle);
+                    return formatAngle(angles1.angleUnit, angles1.thirdAngle);
+                    }
+                });
+
+
+        telemetry.addLine()
+                .addData("status", new Func<String>() {
+                    @Override public String value() {
+                        return imu2.getSystemStatus().toShortString();
+                    }
+                })
+                .addData("calib", new Func<String>() {
+                    @Override public String value() {
+                        return imu2.getCalibrationStatus().toString();
+                    }
+                });
+
+        telemetry.addLine()
+                .addData("heading", new Func<String>() {
+                    @Override public String value() {
+                        return formatAngle(angles2.angleUnit, angles2.firstAngle);
+                    }
+                })
+                .addData("roll", new Func<String>() {
+                    @Override public String value() {
+                        return formatAngle(angles2.angleUnit, angles2.secondAngle);
+                    }
+                })
+                .addData("pitch", new Func<String>() {
+                    @Override public String value() {
+                        return formatAngle(angles2.angleUnit, angles2.thirdAngle);
                     }
                 });
     }

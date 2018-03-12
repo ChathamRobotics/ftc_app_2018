@@ -125,7 +125,7 @@ public class Robot11248 extends HolonomicDriver_11248 {
         this.telemetry = telemetry;
         this.dim = hardwareMap.get(DeviceInterfaceModule.class, "Device Interface Module 1");
 
-        this.vuforia = new Vuforia_V2(hardwareMap);
+        this.vuforia = new Vuforia_V2(hardwareMap, telemetry);
     }
 
     public void init(){

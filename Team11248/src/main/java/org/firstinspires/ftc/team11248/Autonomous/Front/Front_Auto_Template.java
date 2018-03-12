@@ -2,6 +2,7 @@ package org.firstinspires.ftc.team11248.Autonomous.Front;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import org.firstinspires.ftc.team11248.Hardware.Claw;
@@ -14,7 +15,10 @@ import org.firstinspires.ftc.team11248.RevRobot;
 public class Front_Auto_Template extends LinearOpMode{
 
     private final boolean IS_COMP = false;
-    private final int STOP_DELAY = 2000;
+    private final int STOP_DELAY = 1000;
+
+    private int targetAngle = 30; //default Center or Unknown
+
 
     private boolean isBlueAlliance;
 
@@ -28,36 +32,82 @@ public class Front_Auto_Template extends LinearOpMode{
 
     }
 
+
+
     @Override
     public void runOpMode() throws InterruptedException {
 
-        robot = new RevRobot(hardwareMap, telemetry);
-        robot.init();
-        robot.init_IMU();
 
-        claw = !isBlueAlliance ? robot.frontClaw : robot.backClaw; // with !isBlueAlliance pushes glyph (front claw)
+        //with !isBlueAlliance pushes glyph (front claw)
+        claw = !isBlueAlliance ? robot.frontClaw : robot.backClaw;
         passiveClaw = isBlueAlliance ? robot.frontClaw : robot.backClaw;
 
-        robot.vuforia.init(true, IS_COMP);
+
+        /*
+        Inits
+         */
+
+        ElapsedTime mRuntime = new ElapsedTime();
+
+        robot = new RevRobot(hardwareMap, telemetry);
+        robot.init();
+
+        robot.vuforia.init(true, !IS_COMP);
         robot.vuforia.activateTracking();
 
 
-        waitForStart();
+        /*
+        Wait for start
+         */
 
+        while(!isStarted()){
+            robot.vuforia.update();
+            robot.printAlignmentTelemetry();
+            robot.printAutoTelemetry();
+            telemetry.update();
+        }
+
+
+        /*
+        Set baselines
+         */
+
+        mRuntime.reset();
         robot.resetEncoders();
-        robot.setIMUBaseline();
+        robot.imu.setBaseline();
         robot.relicArm.up();
 
+
+        /*
+        Grab Glyph
+         */
 
         claw.grabTop();
         sleep(200); //wait for servo grab
 
 
-        while (opModeIsActive() && !isStopRequested() && state < 16) {
+
+        while (opModeIsActive() && !isStopRequested() && state < 16 && mRuntime.milliseconds()< 29000) {
+
+            if(!IS_COMP) mRuntime.reset();
+
+
+            /*
+            Print telemetry
+             */
 
             telemetry.addData("Auto", "State: " + state);
+
             robot.printAutoTelemetry();
             telemetry.update();
+
+
+            /*
+
+             */
+
+            robot.vuforia.update();
+            robot.imu.logHeadingChanges();
 
             switch (state) {
 
@@ -69,7 +119,7 @@ public class Front_Auto_Template extends LinearOpMode{
                         claw.stop();
 
                         robot.jewelArm.setPower(1);
-                        sleep(250);
+                        sleep(375);
                         robot.jewelArm.stop();
                         sleep(STOP_DELAY);
                         robot.jewelArm.setBaseLine();
@@ -117,7 +167,7 @@ public class Front_Auto_Template extends LinearOpMode{
 
                 case 3: //Read jewel color
 
-                    //if sees one, chck if its lft right
+                    //if sees one, check if its lft right
                     //if nothing go to state with moving the arm back in
 
                     boolean isLeftJewelRed = robot.jewelArm.redCache;
@@ -134,7 +184,7 @@ public class Front_Auto_Template extends LinearOpMode{
 
                         } else { //if in opposite, rotate to hit jewel
 
-                            robot.drive(0, 0, isBlueAlliance ? -1 : 1);
+                            robot.drive(0, 0, isBlueAlliance ? -.5 : .5);
                             sleep(500);
                             robot.stop();
 
@@ -158,7 +208,7 @@ public class Front_Auto_Template extends LinearOpMode{
                         robot.jewelArm.stop();
 
                         robot.drive(0, 0, isBlueAlliance ? .5 : -.5);
-                        sleep(200);
+                        sleep(500);
                         robot.stop();
 
                         fallOffBuildPlate();
@@ -182,7 +232,7 @@ public class Front_Auto_Template extends LinearOpMode{
 
                     robot.drive(0, -.5 * (isBlueAlliance ? 1 : -1), 0);
 
-                    if (robot.isAtAngle('Y', robot.IMUBaseline[1], 5)) {
+                    if (robot.imu.isAtAngle('Y', 0, 1)) {
                         robot.stop();
                         sleep(STOP_DELAY);
                         robot.resetDriveEncoders();
@@ -193,38 +243,33 @@ public class Front_Auto_Template extends LinearOpMode{
                     break;
 
 
-                case 7: // drive forward to align with cryptobox
+                case 7: // drive forward to align with cryptobox center
 
                     int targetRotations = 100; //default Center or Unknown
-                    robot.vuforia.deactivateTracking(); //locks lastImage
 
-                    if(robot.vuforia.getLastImage() == RelicRecoveryVuMark.LEFT ) targetRotations = 0;
-                    else if(robot.vuforia.getLastImage() == RelicRecoveryVuMark.RIGHT ) targetRotations = 200;
+//                    if(robot.vuforia.getLastImage() == RelicRecoveryVuMark.LEFT ) targetRotations = 0;
+//                    else if(robot.vuforia.getLastImage() == RelicRecoveryVuMark.RIGHT ) targetRotations = 200;
 
                     robot.drive(0, -.5 * (isBlueAlliance ? 1 : -1), 0); //drive into box
 
-                    if(Math.abs(robot.getCurrentPosition()) >= targetRotations)
+                    if(Math.abs(robot.getCurrentPosition()) >= targetRotations){
+                        robot.vuforia.deactivateTracking(); //locks lastImage
+                        state++;
+                    }
 
-                    state++;
                     break;
 
 
                 case 8:// align robot angle to cryptobox
 
-                    int targetAngle = 0; //default Center or Unknown
-
-                    if(robot.vuforia.getLastImage() == RelicRecoveryVuMark.LEFT ) targetAngle = 30;
+                    if(robot.vuforia.getLastImage() == RelicRecoveryVuMark.CENTER ) targetAngle = 0;
                     else if(robot.vuforia.getLastImage() == RelicRecoveryVuMark.RIGHT ) targetAngle = -30;
 
-                    if ( robot.moveToAngle(robot.IMUBaseline[2] + (90 + targetAngle) * (isBlueAlliance?1:-1)) ) state++;
+                    if ( robot.moveToAngle((90 + targetAngle) * (isBlueAlliance?1:-1)) ) state++;
                     break;
 
 
                 case 9: //push glyph in cryptobox
-
-                    robot.drive(0, -1 * (isBlueAlliance ? 1 : -1), 0); //drive into box
-                    sleep(1000);
-                    robot.stop();
 
                     depositGlyphs(claw, isBlueAlliance);
 
@@ -236,7 +281,7 @@ public class Front_Auto_Template extends LinearOpMode{
 
                 case 10: // align to glyph pit to attempt 3 glyph auto
 
-                    if ( robot.moveToAngle(robot.IMUBaseline[2] - 90*(isBlueAlliance ? 1 : -1)) ){ //todo + or -
+                    if ( robot.moveToAngle(90 * (isBlueAlliance ? 1 : -1)) ){ //todo + or -
                         state++;
                     }
                     break;
@@ -264,58 +309,59 @@ public class Front_Auto_Template extends LinearOpMode{
 
                 case 13:// realign to box
 
-                    if ( robot.moveToAngle(robot.IMUBaseline[2] + 90*(isBlueAlliance ? 1 : -1)) ){ //todo + or -
-                        state++;
-                    }
+                    if ( robot.moveToAngle((180 + 90 + targetAngle) * (isBlueAlliance?1:-1)) ) state++;
                     break;
 
 
                 case 14://deposit glyphs
 
-                    robot.drive(0, 1.0 * (isBlueAlliance ? 1 : -1), 0);//slide glyphs in claw
-                    sleep(100);
-                    robot.stop();
-
                     depositGlyphs(passiveClaw, !isBlueAlliance);
 
-                    robot.drive(0, -1 * (isBlueAlliance ? 1 : -1), 0);//slide glyphs in claw
-                    sleep(500);
+                    robot.drive(0, -1 * (isBlueAlliance ? 1 : -1), 0);//back up for park
+                    sleep(700);
                     robot.stop();
 
                     state++;
                     break;
 
-
-                case 15: //reset claws to 0 for teleop encoder functions to work
-
-                    if(robot.frontClaw.getCurrentPosition() <= 0) robot.frontClaw.setPower(0);
-                    else robot.frontClaw.setPower(-1);
-
-                    if(robot.backClaw.getCurrentPosition() <= 0) robot.backClaw.setPower(0);
-                    else robot.backClaw.setPower(-1);
-
-                    if(robot.frontClaw.getCurrentPosition() <= 0 & robot.backClaw.getCurrentPosition() <= 0) state ++;
-
-                    break;
-
-
             }//switch
 
-        }//loop
+        }//loop 1
+
+
+
+        while (opModeIsActive() && !isStopRequested()){  //reset claws to 0 for teleop encoder functions to work
+
+            if(robot.frontClaw.getCurrentPosition() <= 0) robot.frontClaw.setPower(0);
+            else robot.frontClaw.setPower(-1);
+
+            if(robot.backClaw.getCurrentPosition() <= 0) robot.backClaw.setPower(0);
+            else robot.backClaw.setPower(-1);
+
+            if(robot.frontClaw.getCurrentPosition() <= 0 & robot.backClaw.getCurrentPosition() <= 0) {
+                break;
+            }
+
+        } //loop 2
+
 
     }//class
 
     private void fallOffBuildPlate(){
 
         robot.drive(0, .5 * (isBlueAlliance? -1 : 1), 0);
-        sleep(500);//to drive
+        sleep(250);//to drive
         robot.setDriftMode(true);
 
         robot.stop();
         sleep(500);//to fall
         robot.setDriftMode(false);
     }
+
     private void depositGlyphs(Claw claw, Boolean direction){
+        robot.drive(0, -1 * (isBlueAlliance ? 1 : -1), 0); //drive into box
+        sleep(750);
+        robot.stop();
 
         claw.open();
 
@@ -328,21 +374,22 @@ public class Front_Auto_Template extends LinearOpMode{
         sleep(STOP_DELAY);
 
         robot.drive(0, -.5 * (direction ? 1 : -1), 0);//tap againg
-        sleep(1000);
+        sleep(750);
         robot.stop();
 
         sleep(STOP_DELAY);
 
         robot.drive(0, .5 * (direction ? 1 : -1), 0);//back up
-        sleep(1000);
+        sleep(1250);
         robot.stop();
 
     }
+
     private void grabNewGlyphs(){
 
         robot.setFastMode(true);
         robot.drive(0, 1.0 * (isBlueAlliance ? 1 : -1), 0); // drive into pit
-        sleep(1000);
+        sleep(700);
         robot.stop();
         robot.setFastMode(false);
 
@@ -360,14 +407,16 @@ public class Front_Auto_Template extends LinearOpMode{
         robot.stop();
 
         passiveClaw.grab(); //grab and raise glyphs
-        passiveClaw.setPower(1);
         sleep(200);
+
+        passiveClaw.setPower(1);
+        sleep(500);
         passiveClaw.setPower(0);
 
 
         robot.setFastMode(true);
         robot.drive(0, -1 * (isBlueAlliance ? 1 : -1), 0);//reverse to box
-        sleep(1000);
+        sleep(700);
         robot.stop();
         robot.setFastMode(false);
     }

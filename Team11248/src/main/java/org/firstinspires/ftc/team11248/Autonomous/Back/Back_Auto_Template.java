@@ -30,7 +30,6 @@ public class Back_Auto_Template extends LinearOpMode{
 
         robot = new RevRobot(hardwareMap, telemetry);
         robot.init();
-        robot.init_IMU();
 
         claw = !isBlueAlliance ? robot.frontClaw : robot.backClaw; // with ! drags glyph (back claw)
 
@@ -41,7 +40,7 @@ public class Back_Auto_Template extends LinearOpMode{
         waitForStart();
 
 
-        robot.setIMUBaseline();
+        robot.imu.setBaseline();
         robot.relicArm.up();
 
         claw.grabTop();
@@ -172,7 +171,7 @@ public class Back_Auto_Template extends LinearOpMode{
 
                     robot.drive(0, -.5 * (isBlueAlliance ? 1 : -1), 0);
 
-                    if (robot.isAtAngle('Y', robot.IMUBaseline[1], 5)) { //TODO
+                    if (robot.imu.isAtAngle('Y', 0, 5)) { //TODO
                         robot.stop();
                         sleep(STOP_DELAY);
                         state++;
@@ -181,7 +180,7 @@ public class Back_Auto_Template extends LinearOpMode{
 
                 case 7:
 
-                    if(robot.moveToAngle(robot.IMUBaseline[0] - 30 *(isBlueAlliance?1:-1))){
+                    if(robot.moveToAngle( -30 *(isBlueAlliance?1:-1))){
                         state++;
 
                     }

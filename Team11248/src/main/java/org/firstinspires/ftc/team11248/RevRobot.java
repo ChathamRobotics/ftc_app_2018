@@ -12,15 +12,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.team11248.Hardware.Claw;
 import org.firstinspires.ftc.team11248.Hardware.HolonomicDriver_11248;
+import org.firstinspires.ftc.team11248.Hardware.IMU;
 import org.firstinspires.ftc.team11248.Hardware.Jewel_Arm;
 import org.firstinspires.ftc.team11248.Hardware.Relic_Arm;
 import org.firstinspires.ftc.team11248.Hardware.Vuforia_V2;
 
 public class RevRobot extends HolonomicDriver_11248 {
-
-    private final double GYRO_THRESHOLD = 5;
-    public double[] IMUBaseline = {0, 0, 0};
-
 
     /*
     CLAW
@@ -31,18 +28,12 @@ public class RevRobot extends HolonomicDriver_11248 {
     private final String[] frontClawNames = {"frontLift", "servo9", "servo7", "servo8", "servo10"};
     private final String[] backClawNames = {"backLift", "servo3", "servo2", "servo4", "servo1"};
 
-
-//    private final double[] frontOpen = {.5, .30, .65, .275};
-//    private final double[] frontRelease = {.45, .55, .6, .5};
-//    private final double[] frontGrab = {.2, .625, .3, .65};
-
-    private final double[] frontOpen = {.55, .3, .675, .275};
-    private final double[] frontRelease = {.35, .5, .425, .525};
+    private final double[] frontOpen = {.525, .3, .675, .275};
+    private final double[] frontRelease = {.375, .475, .45, .5};
     private final double[] frontGrab = {.2, .675, .275, .7};
 
-
-    private final double[] backOpen = {.60, .325, .725, .265};
-    private final double[] backRelease = {.38, .525, .5, .5};
+    private final double[] backOpen = {.575, .325, .725, .265};
+    private final double[] backRelease = {.4, .5, .525, .475};
     private final double[] backGrab = {.25, .675, .35, .65};
 
 
@@ -66,10 +57,7 @@ public class RevRobot extends HolonomicDriver_11248 {
     IMU
      */
 
-    BNO055IMU imu;
-    BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-
-    Orientation lastAngles;
+    public IMU imu;
 
 
     /*
@@ -122,13 +110,12 @@ public class RevRobot extends HolonomicDriver_11248 {
         IMU
          */
 
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-
+        imu = new IMU("imu", "imu2", hardwareMap, telemetry);
 
         /*
         VUFORIA
          */
-        vuforia = new Vuforia_V2(hardwareMap);
+        vuforia = new Vuforia_V2(hardwareMap, telemetry);
 
 
         /*
@@ -140,55 +127,32 @@ public class RevRobot extends HolonomicDriver_11248 {
     }
 
 
+
+    /*
+    Init
+     */
+
     public void init(){
         frontClaw.init();
         backClaw.init();
+        jewelArm.init();
+        imu.init();
+        super.initDrive();
         relicArm.init();
+    }
+
+    public void safe_init(){
+        init();
+        relicArm.up();
+    }
+
+    public void init_teleop(){
+        frontClaw.init();
+        backClaw.init();
         jewelArm.init();
         super.initDrive();
-    }
-
-
-    /*
-    Telemetry
-     */
-
-    public void printIMUTelemetry(){
-        telemetry.addData("", "" );
-        telemetry.addData("IMU", "Heading: "  + getCurrentHeading());
-        telemetry.addData("IMU", "Heading: "  + getCurrentHeading());
-        telemetry.addData("IMU", "Heading: "  + getCurrentHeading());
-
-    }
-
-    public void printSensorTelemetry(){
-        printIMUTelemetry();
-        frontClaw.printTelemetry();
-        backClaw.printTelemetry();
-        relicArm.printTelemetry();
-        jewelArm.printTelemetry();
-        telemetry.update();
-    }
-
-    public void printTelemetry(){
-        frontClaw.printTelemetry();
-        backClaw.printTelemetry();
-        relicArm.printTelemetry();
-        jewelArm.printTelemetry();
-        super.printDriveTelemetry();
-        telemetry.update();
-    }
-
-    public void printCompTelemetry(){
-        super.printDriveCompTelemetry();
-        telemetry.update();
-    }
-
-    public void printAutoTelemetry() { //No telemetry.update(); --- handled in opmode
-        printIMUTelemetry();
-        frontClaw.printTelemetry();
-        backClaw.printTelemetry();
-        jewelArm.printTelemetry();
+        relicArm.init();
+        relicArm.up();
     }
 
 
@@ -217,50 +181,12 @@ public class RevRobot extends HolonomicDriver_11248 {
     IMU
      */
 
-    public void init_IMU(){
-        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
-        parameters.loggingEnabled      = true;
-        parameters.loggingTag          = "IMU";
-        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-
-        imu.initialize(parameters);
-    }
-
-    private void recordAngles(){
-        lastAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-    }
-
-    public double getCurrentPitch(){
-        recordAngles();
-        return lastAngles.firstAngle < 0 ? 360 + lastAngles.firstAngle: lastAngles.firstAngle;
-    }
-
-    public double getCurrentRoll(){
-        recordAngles();
-        return lastAngles.firstAngle < 0 ? 360 + lastAngles.firstAngle: lastAngles.firstAngle;
-    }
-
-    public double getCurrentHeading(){
-        recordAngles();
-        return lastAngles.firstAngle < 0 ? 360 + lastAngles.firstAngle: lastAngles.firstAngle;
-    }
-
-    public void setIMUBaseline(){
-        recordAngles();
-
-        IMUBaseline[0] = getCurrentPitch();
-        IMUBaseline[1] = getCurrentRoll();
-        IMUBaseline[2] = getCurrentHeading();
-    }
-
     public boolean driveWithGyro(double x, double y, double targetAngle, boolean smooth) { //TODO speed up
 
         targetAngle %= 360;
 
         boolean atAngle = false;
-        double currentAngle = getCurrentHeading();
+        double currentAngle = imu.getCurrentHeading();
         double net = currentAngle - targetAngle; //finds distance to target angle
         double rotation;
 
@@ -274,18 +200,18 @@ public class RevRobot extends HolonomicDriver_11248 {
 
         // slows down as approaches angle with min threshold of .05
         // each degree adds/subtracts .95/180 values of speed
-        rotation = Math.abs(net) * .7 / 180 + .3;
+        rotation = Math.abs(net) * .65 / 180 + .35;
 
         if (net < 0) rotation *= -1; //if going clockwise, set rotation clockwise (-)
 
-        if (!(Math.abs(net) > GYRO_THRESHOLD)){
+        if (!(Math.abs(net) > IMU.GYRO_THRESHOLD)){
             atAngle = true;
             rotation = 0;
         }
 
-        driveWithFixedAngle(x, y, rotation, 360 - getCurrentHeading() + targetAngle, smooth); //Drive with gyros rotation
+        drive(x, y, rotation, smooth); //Drive with gyros rotation
 
-        telemetry.addData("driveWithGyro", "Heading: " + getCurrentHeading());
+        telemetry.addData("driveWithGyro", "Heading: " + currentAngle);
         telemetry.addData("driveWithGyro", "Net: " + net);
         telemetry.addData("driveWithGyro", "Speed: " + rotation);
         telemetry.addData("driveWithGyro", "Target: " + targetAngle);
@@ -298,8 +224,6 @@ public class RevRobot extends HolonomicDriver_11248 {
     public boolean driveWithGyro(double x, double y, double targetAngle) {
         return driveWithGyro(x, y, targetAngle, false);
     }
-
-
     /**
      *
      * @param x - x direction power
@@ -322,30 +246,55 @@ public class RevRobot extends HolonomicDriver_11248 {
         return driveWithGyro(0,0, targetAngle);
     }
 
-    public boolean isAtAngle(char axis, double targetAngle, double threshold) {
 
-        double currentAngle = 0;
 
-        switch (axis) {
-            case 'X':
-                currentAngle = getCurrentPitch();
-                break;
+    /*
+    Telemetry
+     */
 
-            case 'Y':
-                currentAngle = getCurrentRoll();
-                break;
-
-            case 'Z':
-                currentAngle = getCurrentHeading();
-                break;
-        }
-
-        return currentAngle <= (targetAngle + threshold) || (currentAngle - threshold) >= targetAngle;
+    public void printSensorTelemetry(){
+        vuforia.printTelemetry();
+        imu.printTelemetry();
+        frontClaw.printTelemetry();
+        backClaw.printTelemetry();
+        relicArm.printTelemetry();
+        jewelArm.printTelemetry();
+        super.printDriveRotations();
+        telemetry.update();
     }
 
-    public boolean isAtAngle(char axis, double targetAngle) {
-        return isAtAngle(axis, targetAngle, GYRO_THRESHOLD);
+    public void printAlignmentTelemetry(){
+
     }
+
+
+    public void printTelemetry(){
+        frontClaw.printTelemetry();
+        backClaw.printTelemetry();
+        relicArm.printTelemetry();
+        jewelArm.printTelemetry();
+        imu.printTelemetry();
+        super.printDriveTelemetry();
+        telemetry.update();
+    }
+
+    public void printTeleOpTelemetry(){
+        super.printDriveCompTelemetry();
+        telemetry.update();
+    }
+
+    public void printAutoTelemetry() { //No telemetry.update(); --- handled in opmode
+        vuforia.printAutoTelemetry();
+        imu.printTelemetry();
+        frontClaw.printTelemetry();
+        backClaw.printTelemetry();
+        jewelArm.printTelemetry();
+    }
+
+    public void goFuckYourself(String name){
+        telemetry.addData(name, "Go Fuck Yourself");
+    }
+
 
 
 }

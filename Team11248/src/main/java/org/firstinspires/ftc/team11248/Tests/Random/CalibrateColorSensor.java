@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.team11248.Tests;
+package org.firstinspires.ftc.team11248.Tests.Random;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor.Command;

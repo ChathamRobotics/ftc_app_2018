@@ -21,22 +21,19 @@ import static org.firstinspires.ftc.team11248.Teleop.Teleop.killed;
 @TeleOp(name="Drive")
 public class Teleop extends OpMode {
 
-    public static final int ENCODER_THRESHOLD = 50;
-    public static volatile boolean killed = false;
+    private final boolean IS_COMP = true;
 
-    private final boolean IS_COMP = false;
+    static final int ENCODER_THRESHOLD = 50; //Thread
+    static volatile boolean killed = false; //Thread
 
     RevRobot robot;
     private Gamepad prevGP1, prevGP2;
-
-    Thread raiseLiftUp1, raiseLiftsToBalance;
 
     @Override
     public void init() {
 
         robot = new RevRobot(hardwareMap, telemetry);
-        robot.init();
-        robot.relicArm.up();
+        robot.init_teleop();
 
         prevGP1 = new Gamepad();
         prevGP2 = new Gamepad();
@@ -58,7 +55,7 @@ public class Teleop extends OpMode {
     @Override
     public void loop() {
 
-        if(IS_COMP) robot.printCompTelemetry();
+        if(IS_COMP) robot.printTeleOpTelemetry();
         else robot.printTelemetry();
 
         /*
@@ -83,6 +80,7 @@ public class Teleop extends OpMode {
 
 
 
+
         /*
          *              GAMEPAD 1
          */
@@ -92,9 +90,9 @@ public class Teleop extends OpMode {
         Drive
          */
 
-
         robot.drive(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x, true);
         robot.setFastMode(gamepad1.right_bumper);
+        if(gamepad1.y && !prevGP1.y) robot.toggleSlowMode();
 
 
         /*
@@ -121,25 +119,22 @@ public class Teleop extends OpMode {
 
         }
 
-        if (gamepad1.right_trigger > 0) GP1_Claw.setPower(gamepad1.right_trigger);
-        else if (gamepad1.left_trigger > 0) GP1_Claw.setPower(-gamepad1.left_trigger);
-        else GP1_Claw.setPower(0);
+        if(GP1_Claw.runMode != DcMotor.RunMode.RUN_WITHOUT_ENCODER){ //if in encoder mode check if were trying to move
+            if (gamepad1.left_trigger > 0 || gamepad1.right_trigger > 0) GP1_Claw.setMotorMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        if(gamepad1.y && !prevGP1.y) robot.toggleSlowMode();
-
-
-        if(gamepad1.left_bumper && !prevGP1.left_bumper) {
-
-//            Thread moveActiveLiftUp1 = new MoveLift(GP1_Claw, Claw.UP1);
-//            new Thread(moveActiveLiftUp1).start();
-
+        }else { // if not in encoder mode, continue normally
+            if (gamepad1.right_trigger > 0) {
+                GP1_Claw.setPower(gamepad1.right_trigger);
+                if (GP1_Claw.runMode != DcMotor.RunMode.RUN_WITHOUT_ENCODER)
+                    GP1_Claw.setMotorMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            } else if (gamepad1.left_trigger > 0) {
+                GP1_Claw.setPower(-gamepad1.left_trigger);
+                if (GP1_Claw.runMode != DcMotor.RunMode.RUN_WITHOUT_ENCODER)
+                    GP1_Claw.setMotorMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            } else GP1_Claw.setPower(0);
         }
 
-         /*
-        Balancing Stone
-         */
-
-        //start raises both lifts to balance height in thread
+        if(gamepad1.left_bumper) GP1_Claw.moveToPosition(Claw.UP1);
 
 
 
@@ -153,9 +148,9 @@ public class Teleop extends OpMode {
         Relic Arm
          */
 
-        if(gamepad2.a && !prevGP2.a) robot.relicArm.grab();
-        if(gamepad2.y && !prevGP2.y) robot.relicArm.up();
-        if(gamepad2.b && !prevGP2.b) robot.relicArm.release();
+        if(gamepad2.a) robot.relicArm.grab(); //does not need debouncing
+        if(gamepad2.y) robot.relicArm.up();
+        if(gamepad2.b) robot.relicArm.release();
 
         if (gamepad2.right_trigger > 0) robot.relicArm.setPower(gamepad2.right_trigger);
         else if (gamepad2.left_trigger > 0) robot.relicArm.setPower(-gamepad2.left_trigger);
@@ -175,7 +170,12 @@ public class Teleop extends OpMode {
         Passive Claw
          */
 
-        GP2_Claw.setPower(-gamepad2.left_stick_y);
+        if(GP2_Claw.runMode != DcMotor.RunMode.RUN_WITHOUT_ENCODER){
+            if (Math.abs(gamepad2.left_stick_y)>0) GP2_Claw.setMotorMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        }else GP2_Claw.setPower(-gamepad2.left_stick_y);
+
+
 
         if(gamepad2.dpad_down && !prevGP2.dpad_down){
 
@@ -184,11 +184,15 @@ public class Teleop extends OpMode {
 
         }
 
-        /*
+         /*
         Balancing Stone
          */
 
-        //start raises both lifts to balance height in thread
+        if(gamepad2.x) {
+            robot.frontClaw.moveToPosition(Claw.UP_BALANCE);
+            robot.backClaw.moveToPosition(Claw.UP_BALANCE);
+
+        }
 
 
 
@@ -214,32 +218,6 @@ public class Teleop extends OpMode {
         killed = true;
     }
 }
-
-//class RaiseLiftsToBalance extends Thread{
-//
-//    private Claw frontClaw, backClaw;
-//
-//    RaiseLiftsToBalance(Claw frontClaw, Claw backClaw){
-//        this.frontClaw = frontClaw;
-//        this.backClaw = backClaw;
-//    }
-//
-//    @Override
-//    public void run() {
-//
-//        while (!isInterrupted() && !killed &&
-//                frontClaw.getCurrentPosition() >= Claw.UP_BALANCE &&
-//                backClaw.getCurrentPosition() >= Claw.UP_BALANCE) {
-//
-//            if(frontClaw.getCurrentPosition() <= Claw.UP_BALANCE) frontClaw.setPower(0);
-//            else frontClaw.setPower(1);
-//
-//            if(backClaw.getCurrentPosition() <= Claw.UP_BALANCE) backClaw.setPower(0);
-//            else backClaw.setPower(1);
-//
-//        }
-//    }
-//}
 
 
 class MoveLift extends Thread{
