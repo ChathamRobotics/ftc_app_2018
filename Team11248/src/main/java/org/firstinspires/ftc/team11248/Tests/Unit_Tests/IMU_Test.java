@@ -10,7 +10,7 @@ import org.firstinspires.ftc.team11248.RevRobot;
  */
 
 
-@TeleOp(name = "IMU Test")
+@TeleOp(name = "IMU Test", group="Unit Test")
 public class IMU_Test extends OpMode {
 
     RevRobot robot;

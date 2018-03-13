@@ -9,9 +9,9 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 
-@Autonomous(name="DogeCV Jewel Detector", group="DogeCV")
+@Autonomous(name="DogeCV Jewel Test", group="Unit Test")
 
-public class JewelOpMode extends OpMode
+public class DogeCV_Jewel_Test extends OpMode
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -46,6 +46,9 @@ public class JewelOpMode extends OpMode
     @Override
     public void init_loop() {
         telemetry.addData("Status", "Initialized.");
+
+        telemetry.addData("Current Order", "Jewel Order: " + jewelDetector.getCurrentOrder().toString()); // Current Result
+        telemetry.addData("Last Order", "Jewel Order: " + jewelDetector.getLastOrder().toString()); // Last Known Result
     }
 
     @Override

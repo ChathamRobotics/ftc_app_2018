@@ -11,7 +11,7 @@ import org.firstinspires.ftc.team11248.RevRobot;
  */
 
 
-@TeleOp(name = "Jewel Arm Test")
+@TeleOp(name = "Jewel Arm Test", group="Unit Test")
 public class Jewel_Arm_Test extends OpMode {
 
     private RevRobot robot;

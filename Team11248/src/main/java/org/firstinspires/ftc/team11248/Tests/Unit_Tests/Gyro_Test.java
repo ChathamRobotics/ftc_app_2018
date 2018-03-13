@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.team11248.RevRobot;
 
 
-@TeleOp(name = "MoveToAngle Test")
+@TeleOp(name = "MoveToAngle Test", group="Unit Test")
 public class Gyro_Test extends OpMode {
 
     RevRobot robot;

@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.team11248.RevRobot;
 
-@TeleOp(name = "Sensor Test")
+@TeleOp(name = "Sensor Test", group="Unit Test")
 public class Sensor_Test extends OpMode{
 
     RevRobot robot;

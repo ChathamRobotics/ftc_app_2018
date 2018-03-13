@@ -16,6 +16,7 @@ public class Front_Auto_Template extends LinearOpMode{
 
     private final boolean IS_COMP = false;
     private final int STOP_DELAY = 1000;
+    private final int DEPOSIT_DELAY = 500;
 
     private int targetAngle = 30; //default Center or Unknown
 
@@ -265,7 +266,7 @@ public class Front_Auto_Template extends LinearOpMode{
                     if(robot.vuforia.getLastImage() == RelicRecoveryVuMark.CENTER ) targetAngle = 0;
                     else if(robot.vuforia.getLastImage() == RelicRecoveryVuMark.RIGHT ) targetAngle = -30;
 
-                    if ( robot.moveToAngle((90 + targetAngle) * (isBlueAlliance?1:-1)) ) state++;
+                    if ( robot.moveToAngle( (90 * (isBlueAlliance?1:-1)) + targetAngle) ) state++;
                     break;
 
 
@@ -282,6 +283,8 @@ public class Front_Auto_Template extends LinearOpMode{
                 case 10: // align to glyph pit to attempt 3 glyph auto
 
                     if ( robot.moveToAngle(90 * (isBlueAlliance ? 1 : -1)) ){ //todo + or -
+                        passiveClaw.setMotorMode(DcMotor.RunMode.RUN_TO_POSITION);
+                        passiveClaw.setTargetPosition(Claw.UP1);
                         state++;
                     }
                     break;
@@ -293,6 +296,7 @@ public class Front_Auto_Template extends LinearOpMode{
 
                     if(passiveClaw.getCurrentPosition() >= Claw.UP1){
                         passiveClaw.setPower(0);
+                        passiveClaw.setMotorMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                         state++;
                     }
                     break;
@@ -309,7 +313,7 @@ public class Front_Auto_Template extends LinearOpMode{
 
                 case 13:// realign to box
 
-                    if ( robot.moveToAngle((180 + 90 + targetAngle) * (isBlueAlliance?1:-1)) ) state++;
+                    if ( robot.moveToAngle( (90 * (isBlueAlliance?1:-1)) + targetAngle + 180) ) state++;
                     break;
 
 
@@ -360,27 +364,27 @@ public class Front_Auto_Template extends LinearOpMode{
 
     private void depositGlyphs(Claw claw, Boolean direction){
         robot.drive(0, -1 * (isBlueAlliance ? 1 : -1), 0); //drive into box
-        sleep(750);
+        sleep(700);
         robot.stop();
 
         claw.open();
 
-        sleep(STOP_DELAY);
+        sleep(DEPOSIT_DELAY);
 
         robot.drive(0, .5 * (direction ? 1 : -1), 0); //back up
         sleep(500);
         robot.stop();
 
-        sleep(STOP_DELAY);
+        sleep(DEPOSIT_DELAY);
 
         robot.drive(0, -.5 * (direction ? 1 : -1), 0);//tap againg
         sleep(750);
         robot.stop();
 
-        sleep(STOP_DELAY);
+        sleep(DEPOSIT_DELAY);
 
         robot.drive(0, .5 * (direction ? 1 : -1), 0);//back up
-        sleep(1250);
+        sleep(750);
         robot.stop();
 
     }
@@ -395,22 +399,11 @@ public class Front_Auto_Template extends LinearOpMode{
 
         sleep(STOP_DELAY);
 
-        robot.drive(0, -.5 * (isBlueAlliance ? 1 : -1), 0);//back up
-        sleep(500);
-        robot.stop();
-
-        sleep(STOP_DELAY);
-
-        passiveClaw.release();
-        robot.drive(0, .5 * (isBlueAlliance ? 1 : -1), 0);//slide glyphs in claw
-        sleep(500);
-        robot.stop();
-
-        passiveClaw.grab(); //grab and raise glyphs
+        passiveClaw.grab(); //grab
         sleep(200);
 
-        passiveClaw.setPower(1);
-        sleep(500);
+        passiveClaw.setPower(1);//raise glyphs
+        sleep(300);
         passiveClaw.setPower(0);
 
 

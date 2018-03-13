@@ -28,7 +28,7 @@ public class Vuforia_V2 {
 
     public static final String vuforiaKey = "AeTwV0H/////AAAAGfe7ayWmjE9+nI9k65aoO+NQIIujZBIX8AxeoVDf9bwLLNvQ6QwvM+Clc3CE/8Pumv5guDuXMxkERpyJTzSb50PcrH9y/lJC9Zfh0FlPVkkvDnZVNsPEIEsg0Ta5oDlz1jIZmSB/Oxu2qRAyo4jXIsWSmDMdQdpNrwkyKbLfl/CT7PWe23RAdF8oQf5XqnSbKoapQali8MH4+HPOR8r13/k+cZv9eKqUvknmxZPiyJbp4oFzqrWDJSUqwTGQLEdbp76Hjrkuxu3Pa/I4jQSt3RRRbAUrZeV1Z79cLKg+22SvrhUKKzwxeEMcgp4rQzrMXhTL+wE+6sBczuguHmPtWA5w/NsUlevRaLbEionbyXYN";
 
-    private VuforiaLocalizer vuforia;
+    private ClosableVuforiaLocalizer vuforia;
     private VuforiaTrackables relicTrackables;
     private VuforiaTrackable relicTemplate;
 
@@ -75,7 +75,7 @@ public class Vuforia_V2 {
         parameters.vuforiaLicenseKey = Vuforia_V2.vuforiaKey;
 
         parameters.cameraDirection = frontCamera?VuforiaLocalizer.CameraDirection.FRONT:VuforiaLocalizer.CameraDirection.BACK;
-        this.vuforia = ClassFactory.createVuforiaLocalizer(parameters);
+        this.vuforia = new ClosableVuforiaLocalizer(parameters);
 
         this.relicTrackables = this.vuforia.loadTrackablesFromAsset("RelicVuMark");
         this.relicTemplate = relicTrackables.get(0);
@@ -93,6 +93,7 @@ public class Vuforia_V2 {
 
     public void deactivateTracking(){
         this.relicTrackables.deactivate();
+        vuforia.close();
     }
 
     public RelicRecoveryVuMark getLastImage(){

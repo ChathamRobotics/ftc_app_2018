@@ -11,7 +11,7 @@ import org.firstinspires.ftc.team11248.RevRobot;
  * Created by tonytesoriero on 9/11/17.
  */
 
-@TeleOp( name = "VuForia Test")
+@TeleOp( name = "VuForia Test", group="Unit Test")
 
 public class Vuforia_Test extends OpMode {
 
