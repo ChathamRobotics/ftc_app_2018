@@ -51,6 +51,8 @@ public class Jewel_Arm_Test extends OpMode {
 
         }
 
+        if(robot.jewelArm.getCurrentPosition() > robot.jewelArm.MAX_ENCODER_COUNT || robot.jewelArm.getCurrentPosition() < 0) power = 0;
+
         lastJewelArmPress = robot.jewelArm.pressed();
 
         robot.jewelArm.setPower(power);

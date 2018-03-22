@@ -25,13 +25,14 @@ public class Sensor_Test extends OpMode{
         robot.frontClaw.setDriftMode(true);
         robot.relicArm.setDriftMode(true);
 
-        robot.vuforia.init(true,true);
     }
 
     @Override
     public void start(){
-        robot.vuforia.activateTracking();
         robot.imu.setBaseline();
+        robot.vuforia.init(true,true);
+        robot.vuforia.activateTracking();
+
     }
 
     @Override

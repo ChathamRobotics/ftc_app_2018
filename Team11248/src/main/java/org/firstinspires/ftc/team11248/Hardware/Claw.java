@@ -16,7 +16,12 @@ public class Claw {
     public enum Position {
         OPEN,
         RELEASE,
-        GRAB,
+        GRAB
+    }
+
+    public enum Side {
+        FRONT,
+        BACK
     }
 
     public static final int PICK_UP_GLYPH = 700;//value to pick up one glyph
@@ -27,7 +32,7 @@ public class Claw {
     public Position topState;
     public Position bottomState;
     public DcMotor.RunMode runMode;
-    public String header;
+    public Side header;
     private double[] open, grab, release;
     private int lastRotation = 0;
 
@@ -42,7 +47,7 @@ public class Claw {
      * @param open Double array of 4 open values of the servos {top_left, top_right, bottom_left, bottom_right}
      * @param grab Double array of 4 grabbing values of the servos {top_left, top_right, bottom_left, bottom_right}
      */
-    public Claw(String header, String[] motorServoNames, double[] open, double[] release, double[] grab, HardwareMap hardwareMap, Telemetry telemetry){
+    public Claw(Side header, String[] motorServoNames, double[] open, double[] release, double[] grab, HardwareMap hardwareMap, Telemetry telemetry){
 
         this.header = header;
 
@@ -210,9 +215,9 @@ public class Claw {
     public void printTelemetry(){
 
         telemetry.addData(" ", " ");
-        telemetry.addData(header + "Top Claw", "Top State: "+ topState.toString());
-        telemetry.addData(header + "Bottom Claw", "Bottom State: "+ bottomState.toString());
-        telemetry.addData(header + " Claw", "Rotation: " + getCurrentPosition());
+        telemetry.addData( header.name() + "Top Claw", "Top State: "+ topState.toString());
+        telemetry.addData(header.name() + "Bottom Claw", "Bottom State: "+ bottomState.toString());
+        telemetry.addData(header.name() + " Claw", "Rotation: " + getCurrentPosition());
     }
 
     public void printCompTelemetry(){

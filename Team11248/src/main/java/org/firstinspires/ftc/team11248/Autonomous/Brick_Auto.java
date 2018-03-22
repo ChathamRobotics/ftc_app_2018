@@ -1,7 +1,8 @@
-package org.firstinspires.ftc.team11248.Autonomous.Back;
+package org.firstinspires.ftc.team11248.Autonomous;
 
 import com.disnodeteam.dogecv.CameraViewDisplay;
 import com.disnodeteam.dogecv.detectors.JewelDetector;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -14,7 +15,8 @@ import org.firstinspires.ftc.team11248.RevRobot;
  * Created by tonytesoriero on 2/19/18.
  */
 
-public class Back_Auto_Template extends LinearOpMode{
+@Autonomous(name="brick")
+public class Brick_Auto extends LinearOpMode{
 
     private final boolean IS_COMP = true;
     private final int STOP_DELAY = 500;
@@ -22,20 +24,12 @@ public class Back_Auto_Template extends LinearOpMode{
 
     private int targetAngle = 15; //Left Center or Unknown
 
-
-    private boolean isBlueAlliance;
+    private boolean isBlueAlliance = true;
 
     private RevRobot robot;
     private Claw claw, passiveClaw;
 
     private int state = 0;
-
-    public Back_Auto_Template(boolean isBlueAlliance){
-        this.isBlueAlliance = isBlueAlliance;
-
-    }
-
-
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -51,7 +45,6 @@ public class Back_Auto_Template extends LinearOpMode{
         robot = new RevRobot(hardwareMap, telemetry);
         robot.init();
 
-        robot.jewelDetector.init(hardwareMap.appContext, CameraViewDisplay.getInstance(), 1);
 
         //with !isBlueAlliance pushes glyph (front claw)
         claw = !isBlueAlliance ? robot.frontClaw : robot.backClaw;
@@ -64,15 +57,13 @@ public class Back_Auto_Template extends LinearOpMode{
 
         while(!isStarted()){
             robot.vuforia.update();
-//            robot.printAlignmentTelemetry();
-//            robot.printAutoTelemetry();
+            robot.printAlignmentTelemetry();
+            robot.printAutoTelemetry();
             telemetry.update();
         }
 
         robot.relicArm.up();
         sleep(200);
-        robot.jewelDetector.enable();
-
         /*
         Set baselines
          */
@@ -102,9 +93,6 @@ public class Back_Auto_Template extends LinearOpMode{
 
             telemetry.addData("Auto", "State: " + state);
 
-//            robot.printAutoTelemetry();
-            telemetry.update();
-
 
             /*
 
@@ -122,14 +110,11 @@ public class Back_Auto_Template extends LinearOpMode{
                     if (claw.getCurrentPosition() >= Claw.PICK_UP_GLYPH) {
                         claw.stop();
 
-                        robot.jewelArm.setPower(1);
-                        sleep(375);
                         robot.jewelArm.stop();
                         sleep(STOP_DELAY);
                         robot.jewelArm.setBaseLine();
-                        robot.jewelDetector.disable();
                         robot.vuforia.init(true, !IS_COMP);
-                        state++;
+                        state=7;
                     }
 
                     break;
@@ -178,15 +163,15 @@ public class Back_Auto_Template extends LinearOpMode{
                     boolean isLeftJewelRed = false;
                     boolean isLeftJewelBlue = false;
 
-//                    if(robot.jewelDetector.getLastOrder() != JewelDetector.JewelOrder.UNKNOWN){
-//                        isLeftJewelRed = robot.jewelDetector.getLastOrder() == JewelDetector.JewelOrder.RED_BLUE;
-//                        isLeftJewelBlue = robot.jewelDetector.getLastOrder() == JewelDetector.JewelOrder.BLUE_RED;
+                    if(robot.jewelDetector.getLastOrder() != JewelDetector.JewelOrder.UNKNOWN){
+                        isLeftJewelRed = robot.jewelDetector.getLastOrder() == JewelDetector.JewelOrder.RED_BLUE;
+                        isLeftJewelBlue = robot.jewelDetector.getLastOrder() == JewelDetector.JewelOrder.BLUE_RED;
 
-//                    } else {
+                    } else {
                         isLeftJewelRed = robot.jewelArm.redCache;
                         isLeftJewelBlue = robot.jewelArm.blueCache;
 
-//                    }
+                    }
 
                     if (isLeftJewelBlue != isLeftJewelRed) {
 
@@ -292,8 +277,8 @@ public class Back_Auto_Template extends LinearOpMode{
 //                    robot.drive(0, -.5 * (isBlueAlliance ? 1 : -1), 0); //drive into box
 //
 //                    if(Math.abs(robot.getCurrentPosition()) >= targetRotations){
-                        robot.vuforia.deactivateTracking(); //locks lastImage
-                        state++;
+                    robot.vuforia.deactivateTracking(); //locks lastImage
+                    state++;
 //                    }
 
 

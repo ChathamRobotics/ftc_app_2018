@@ -1,6 +1,7 @@
 package com.disnodeteam.dogecv.detectors;
 
 
+import com.disnodeteam.dogecv.CameraViewDisplay;
 import com.disnodeteam.dogecv.OpenCVPipeline;
 import com.disnodeteam.dogecv.filters.DogeCVColorFilter;
 import com.disnodeteam.dogecv.filters.LeviColorFilter;
@@ -44,16 +45,16 @@ public class JewelDetector extends OpenCVPipeline {
 
 
     public JewelDetectionMode  detectionMode    = JewelDetectionMode.MAX_AREA;
-    public double              downScaleFactor  = 0.4;
+    public double              downScaleFactor  = 1;
     public double              perfectRatio     = 1;
-    public boolean             rotateMat        = false;
+    public boolean             rotateMat        = true;
     public JewelDetectionSpeed speed            = JewelDetectionSpeed.BALANCED;
     public double              perfectArea      = 6500;
-    public double              areaWeight       = 0.05; // Since we're dealing with 100's of pixels
-    public double              minArea          = 700;
+    public double              areaWeight       = 0.03; // Since we're dealing with 100's of pixels
+    public double              minArea          = 500;
     public double              ratioWeight      = 15; // Since most of the time the area diffrence is a decimal place
-    public double              maxDiffrence     = 10; // Since most of the time the area diffrence is a decimal place
-    public boolean             debugContours    = false;
+    public double              maxDiffrence     = 15; // Since most of the time the area diffrence is a decimal place
+    public boolean             debugContours    = true;
     public DogeCVColorFilter   colorFilterRed   = new LeviColorFilter(LeviColorFilter.ColorPreset.RED);
     public DogeCVColorFilter   colorFilterBlue  = new LeviColorFilter(LeviColorFilter.ColorPreset.BLUE);
 

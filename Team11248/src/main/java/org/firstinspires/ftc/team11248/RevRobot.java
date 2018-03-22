@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.team11248;
 
+import com.disnodeteam.dogecv.CameraViewDisplay;
+import com.disnodeteam.dogecv.detectors.JewelDetector;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -19,6 +21,9 @@ import org.firstinspires.ftc.team11248.Hardware.Vuforia_V2;
 
 public class RevRobot extends HolonomicDriver_11248 {
 
+    private double delta_rot =  0;
+    private double lastRot =  0;
+
     /*
     CLAW
      */
@@ -26,13 +31,13 @@ public class RevRobot extends HolonomicDriver_11248 {
     public Claw frontClaw, backClaw;
 
     private final String[] frontClawNames = {"frontLift", "servo9", "servo7", "servo8", "servo10"};
-    private final String[] backClawNames = {"backLift", "servo3", "servo2", "servo4", "servo1"};
+    private final String[] backClawNames = {"backLift", "servo6", "servo2", "servo4", "servo5"};
 
-    private final double[] frontOpen = {.525, .3, .675, .275};
+    private final double[] frontOpen = {.5375, .3, .685, .275};
     private final double[] frontRelease = {.375, .475, .45, .5};
     private final double[] frontGrab = {.2, .675, .275, .7};
 
-    private final double[] backOpen = {.575, .325, .725, .265};
+    private final double[] backOpen = {.6, .31, .735, .245};
     private final double[] backRelease = {.4, .5, .525, .475};
     private final double[] backGrab = {.25, .675, .35, .65};
 
@@ -43,7 +48,7 @@ public class RevRobot extends HolonomicDriver_11248 {
 
     public Relic_Arm relicArm;
     private final double[] pivotVal = {1, 0, 0};
-    private final double[] grabVal = {1, .445};
+    private final double[] grabVal = {1, .425};
 
 
     /*
@@ -65,6 +70,8 @@ public class RevRobot extends HolonomicDriver_11248 {
      */
 
     public Vuforia_V2 vuforia;
+    public JewelDetector jewelDetector;
+
 
 
     /*
@@ -88,8 +95,8 @@ public class RevRobot extends HolonomicDriver_11248 {
         CLAW
          */
 
-        this.frontClaw = new Claw("Front", frontClawNames, frontOpen, frontRelease, frontGrab, hardwareMap, telemetry);
-        this.backClaw = new Claw("Back", backClawNames, backOpen, backRelease, backGrab, hardwareMap, telemetry);
+        this.frontClaw = new Claw(Claw.Side.FRONT, frontClawNames, frontOpen, frontRelease, frontGrab, hardwareMap, telemetry);
+        this.backClaw = new Claw(Claw.Side.BACK, backClawNames, backOpen, backRelease, backGrab, hardwareMap, telemetry);
 
 
         /*
@@ -116,6 +123,7 @@ public class RevRobot extends HolonomicDriver_11248 {
         VUFORIA
          */
         vuforia = new Vuforia_V2(hardwareMap, telemetry);
+        jewelDetector = new JewelDetector();
 
 
         /*
@@ -185,6 +193,8 @@ public class RevRobot extends HolonomicDriver_11248 {
 
         targetAngle %= 360;
 
+        if (targetAngle<0) targetAngle += 360;
+
         boolean atAngle = false;
         double currentAngle = imu.getCurrentHeading();
         double net = currentAngle - targetAngle; //finds distance to target angle
@@ -200,7 +210,7 @@ public class RevRobot extends HolonomicDriver_11248 {
 
         // slows down as approaches angle with min threshold of .05
         // each degree adds/subtracts .95/180 values of speed
-        rotation = Math.abs(net) * .65 / 180 + .35;
+        rotation = Math.abs(net) * .7 / 180 + .3;
 
         if (net < 0) rotation *= -1; //if going clockwise, set rotation clockwise (-)
 
@@ -209,7 +219,16 @@ public class RevRobot extends HolonomicDriver_11248 {
             rotation = 0;
         }
 
+        delta_rot = rotation - lastRot;
+
+        if(Math.abs(delta_rot) > .65){
+            rotation -= delta_rot;
+        }
+
         drive(x, y, rotation, smooth); //Drive with gyros rotation
+
+        lastRot = rotation;
+
 
         telemetry.addData("driveWithGyro", "Heading: " + currentAngle);
         telemetry.addData("driveWithGyro", "Net: " + net);
@@ -284,15 +303,12 @@ public class RevRobot extends HolonomicDriver_11248 {
     }
 
     public void printAutoTelemetry() { //No telemetry.update(); --- handled in opmode
+        telemetry.addData("Jewel Detector", "Last image: " + jewelDetector.getLastOrder());
         vuforia.printAutoTelemetry();
         imu.printTelemetry();
         frontClaw.printTelemetry();
         backClaw.printTelemetry();
         jewelArm.printTelemetry();
-    }
-
-    public void goFuckYourself(String name){
-        telemetry.addData(name, "Go Fuck Yourself");
     }
 
 

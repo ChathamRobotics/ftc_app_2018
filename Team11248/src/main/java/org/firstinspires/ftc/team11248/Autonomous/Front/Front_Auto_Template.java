@@ -14,11 +14,11 @@ import org.firstinspires.ftc.team11248.RevRobot;
 
 public class Front_Auto_Template extends LinearOpMode{
 
-    private final boolean IS_COMP = false;
+    private final boolean IS_COMP = true;
     private final int STOP_DELAY = 1000;
     private final int DEPOSIT_DELAY = 500;
 
-    private int targetAngle = 30; //default Center or Unknown
+    private int targetAngle = 30; //Left Center or Unknown
 
 
     private boolean isBlueAlliance;
@@ -38,12 +38,6 @@ public class Front_Auto_Template extends LinearOpMode{
     @Override
     public void runOpMode() throws InterruptedException {
 
-
-        //with !isBlueAlliance pushes glyph (front claw)
-        claw = !isBlueAlliance ? robot.frontClaw : robot.backClaw;
-        passiveClaw = isBlueAlliance ? robot.frontClaw : robot.backClaw;
-
-
         /*
         Inits
          */
@@ -55,6 +49,11 @@ public class Front_Auto_Template extends LinearOpMode{
 
         robot.vuforia.init(true, !IS_COMP);
         robot.vuforia.activateTracking();
+
+
+        //with !isBlueAlliance pushes glyph (front claw)
+        claw = !isBlueAlliance ? robot.frontClaw : robot.backClaw;
+        passiveClaw = isBlueAlliance ? robot.frontClaw : robot.backClaw;
 
 
         /*
@@ -195,7 +194,7 @@ public class Front_Auto_Template extends LinearOpMode{
 
                     } else {
 
-                        fallOffBuildPlate();
+                        fallOffBuildPlate(); //TODO State+2 THEN fall off
                         state += 2; // if doesnt sense anything retract arm and continue
                     }
                     break;
@@ -231,22 +230,24 @@ public class Front_Auto_Template extends LinearOpMode{
 
                 case 6: //Drive off build plate till flat
 
-                    robot.drive(0, -.5 * (isBlueAlliance ? 1 : -1), 0);
+//                    robot.drive(0, -.5 * (isBlueAlliance ? 1 : -1), 0);
+//
+//                    if (robot.imu.isAtAngle('Y', 0, 1)) {
+//                        robot.stop();
+//                        sleep(STOP_DELAY);
+//                        robot.resetDriveEncoders();
+//
+//                        state++;
+//                    }
 
-                    if (robot.imu.isAtAngle('Y', 0, 1)) {
-                        robot.stop();
-                        sleep(STOP_DELAY);
-                        robot.resetDriveEncoders();
-
-                        state++;
-                    }
+                    state++;
 
                     break;
 
 
                 case 7: // drive forward to align with cryptobox center
 
-                    int targetRotations = 100; //default Center or Unknown
+                    int targetRotations = 75; //default Center or Unknown
 
 //                    if(robot.vuforia.getLastImage() == RelicRecoveryVuMark.LEFT ) targetRotations = 0;
 //                    else if(robot.vuforia.getLastImage() == RelicRecoveryVuMark.RIGHT ) targetRotations = 200;
@@ -333,6 +334,7 @@ public class Front_Auto_Template extends LinearOpMode{
         }//loop 1
 
 
+        robot.stop();
 
         while (opModeIsActive() && !isStopRequested()){  //reset claws to 0 for teleop encoder functions to work
 
@@ -342,7 +344,10 @@ public class Front_Auto_Template extends LinearOpMode{
             if(robot.backClaw.getCurrentPosition() <= 0) robot.backClaw.setPower(0);
             else robot.backClaw.setPower(-1);
 
-            if(robot.frontClaw.getCurrentPosition() <= 0 & robot.backClaw.getCurrentPosition() <= 0) {
+            if(robot.jewelArm.getCurrentPosition() <= 0) robot.jewelArm.setPower(0);
+            else robot.jewelArm.setPower(-1);
+
+            if(robot.frontClaw.getCurrentPosition() <= 0 && robot.backClaw.getCurrentPosition() <= 0 && robot.jewelArm.getCurrentPosition() <= 0) {
                 break;
             }
 

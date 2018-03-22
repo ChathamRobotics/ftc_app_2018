@@ -102,13 +102,18 @@ public class IMU {
         Orientation lastAngles1 = imu1.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES);
         Orientation lastAngles2 = imu2.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES);
 
-        this.lastAngles1[0] = (lastAngles1.firstAngle + 180) - baseLine1[0]; //heading
-        this.lastAngles1[1] = (lastAngles1.secondAngle + 180) - baseLine1[1]; //roll
-        this.lastAngles1[2] = (lastAngles1.thirdAngle + 180) - baseLine1[2]; //pitch
+        this.lastAngles1[0] = ((lastAngles1.firstAngle + 180) - baseLine1[0]) % 360; //heading
+        this.lastAngles1[1] = ((lastAngles1.secondAngle + 180) - baseLine1[1]) % 360; //rollv
+        this.lastAngles1[2] = ((lastAngles1.thirdAngle + 180) - baseLine1[2]) % 360; //pitch
 
-        this.lastAngles2[0] = (lastAngles2.firstAngle + 180) - baseLine2[0]; //heading
-        this.lastAngles2[1] = (lastAngles2.secondAngle + 180) - baseLine2[1]; //roll
-        this.lastAngles2[2] = (lastAngles2.thirdAngle + 180) - baseLine2[2]; //pitch
+        this.lastAngles2[0] = ((lastAngles2.firstAngle + 180) - baseLine2[0]) % 360; //heading
+        this.lastAngles2[1] = ((lastAngles2.secondAngle + 180) - baseLine2[1]) % 360; //roll
+        this.lastAngles2[2] = ((lastAngles2.thirdAngle + 180) - baseLine2[2]) % 360; //pitch
+
+        for (int i = 0; i<3; i++){ //makes sure modulo returns positive
+            if(this.lastAngles1[i]<0) this.lastAngles1[i] += 360;
+            if(this.lastAngles2[i]<0) this.lastAngles2[i] += 360;
+        }
 
     }
 
@@ -182,15 +187,15 @@ public class IMU {
         double currentAngle = 0;
 
         switch (axis) {
-            case 'X':
+            case 'Z':
                 currentAngle = getCurrentPitch();
                 break;
 
-            case 'Y':
+            case 'X':
                 currentAngle = getCurrentRoll();
                 break;
 
-            case 'Z':
+            case 'Y':
                 currentAngle = getCurrentHeading();
                 break;
         }

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.team11248.Hardware;
 
+import android.graphics.Color;
+
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
@@ -14,16 +16,20 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class Jewel_Arm {
 
     public final int MAX_ENCODER_COUNT = 2400;
-    private final int COLOR_THRESHOLD = 40;
+    private final int COLOR_THRESHOLD = 50;
     private final int ENCODER_THRESHOLD = 5;
 
     private int lastRotation = 0;
     public int rotationsToWall;
-    public final int BACK_UP_ROTATIONS = 100;
+    public final int BACK_UP_ROTATIONS = 150;
 
 
     public boolean redCache = false;
     public boolean blueCache = false;
+
+    public boolean hredCache = false;
+    public boolean hblueCache = false;
+
     public boolean touchCache = false;
 
     public double blueBaseLine = 0;
@@ -34,6 +40,11 @@ public class Jewel_Arm {
     private DistanceSensor distanceSensor;
     private DigitalChannel touchSensor;
     private Telemetry telemetry;
+
+    float hsvBaseline[] = {0F, 0F, 0F};
+    float hsv[] = {0F, 0F, 0F};
+    final double SCALE_FACTOR = 255;
+
 
 
     public Jewel_Arm (String motor, String colorDistanceSensor, String touchSensor, HardwareMap hardwareMap, Telemetry telemetry){
@@ -115,6 +126,12 @@ public class Jewel_Arm {
     public void setBaseLine(){
         blueBaseLine = colorSensor.blue();
         redBaseLine = colorSensor.red();
+
+
+        Color.RGBToHSV((int) (colorSensor.red() * SCALE_FACTOR),
+                (int) (colorSensor.green() * SCALE_FACTOR),
+                (int) (colorSensor.blue() * SCALE_FACTOR),
+                hsvBaseline);
     }
 
     public boolean isBlue(){//could compaire base line to current blue
@@ -135,6 +152,26 @@ public class Jewel_Arm {
         return redCache;
     }
 
+    public boolean isBlueHSV(){
+        Color.RGBToHSV((int) (colorSensor.red() * SCALE_FACTOR),
+                (int) (colorSensor.green() * SCALE_FACTOR),
+                (int) (colorSensor.blue() * SCALE_FACTOR),
+                hsv);
+
+
+        hblueCache = (( hsv[0] + COLOR_THRESHOLD >= 200) || (hsv[0] - COLOR_THRESHOLD <= 200));
+        return hblueCache;
+    }
+
+    public boolean isRedHSV(){
+        Color.RGBToHSV((int) (colorSensor.red() * SCALE_FACTOR),
+                (int) (colorSensor.green() * SCALE_FACTOR),
+                (int) (colorSensor.blue() * SCALE_FACTOR),
+                hsv);
+
+        hblueCache = ( ( hsv[0] + COLOR_THRESHOLD >= 360) || (hsv[0] - COLOR_THRESHOLD <= 360));
+        return hredCache;
+    }
     public void enableColorLed(boolean on){
         colorSensor.enableLed(on);
     }
@@ -170,6 +207,8 @@ public class Jewel_Arm {
     public void updateCache(){
         isBlue();
         isRed();
+        isBlueHSV();
+        isRed();
         pressed();
     }
 
@@ -177,6 +216,10 @@ public class Jewel_Arm {
         redCache = false;
         blueCache = false;
         touchCache = false;
+        hredCache =false;
+        hblueCache = false;
+        float hsvBaseline[] = {0F, 0F, 0F};
+        float hsv[] = {0F, 0F, 0F};
         redBaseLine = 0;
         blueBaseLine = 0;
     }
@@ -190,6 +233,8 @@ public class Jewel_Arm {
         telemetry.addData(" ", " ");
         telemetry.addData("Jewel Arm", "isBlue: " + isBlue());
         telemetry.addData("Jewel Arm", "isRed: " + isRed());
+        telemetry.addData("Jewel Arm", "isHBlue: " + isBlueHSV());
+        telemetry.addData("Jewel Arm", "isHRed: " + isRedHSV());
         telemetry.addData("Jewel Arm", "pressed: " + pressed());
         telemetry.addData("Jewel Arm", "Distance CM: " + getDistance());
         telemetry.addData("Jewel Arm", "Rotation: " + getCurrentPosition());

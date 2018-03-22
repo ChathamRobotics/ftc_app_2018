@@ -27,16 +27,17 @@ public class DogeCV_Jewel_Test extends OpMode
 
 
         jewelDetector = new JewelDetector();
-        jewelDetector.init(hardwareMap.appContext, CameraViewDisplay.getInstance());
+        jewelDetector.init(hardwareMap.appContext, CameraViewDisplay.getInstance(), 1);
 
-        //Jewel Detector Settings
-        jewelDetector.areaWeight = 0.02;
-        jewelDetector.detectionMode = JewelDetector.JewelDetectionMode.MAX_AREA; // PERFECT_AREA
-        //jewelDetector.perfectArea = 6500; <- Needed for PERFECT_AREA
-        jewelDetector.debugContours = true;
-        jewelDetector.maxDiffrence = 15;
-        jewelDetector.ratioWeight = 15;
-        jewelDetector.minArea = 700;
+//        //Jewel Detector Settings
+//        jewelDetector.areaWeight = 0.02;
+//        jewelDetector.detectionMode = JewelDetector.JewelDetectionMode.MAX_AREA; // PERFECT_AREA
+//        //jewelDetector.perfectArea = 6500; <- Needed for PERFECT_AREA
+//        jewelDetector.debugContours = true;
+//        jewelDetector.maxDiffrence = 15;
+//        jewelDetector.ratioWeight = 15;
+//        jewelDetector.minArea = 700;
+//        jewelDetector.rotateMat = true;
 
         jewelDetector.enable();
 
