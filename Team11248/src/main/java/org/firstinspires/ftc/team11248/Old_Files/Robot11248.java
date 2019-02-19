@@ -101,8 +101,10 @@ public class Robot11248 extends HolonomicDriver_11248 {
          * SERVO INITS
          */
         this.jewelArm = hardwareMap.servo.get("servo7");
-        this.frontClaw = new Claw("Front",frontServoNames, open, release, grab, hardwareMap, telemetry);
-        this.backClaw = new Claw("Back", backServoNames, open, release, grab, hardwareMap, telemetry);
+
+        this.frontClaw = new Claw(Claw.Side.FRONT, frontServoNames, open, release, grab, hardwareMap, telemetry);
+        this.backClaw = new Claw(Claw.Side.BACK, backServoNames, open, release, grab, hardwareMap, telemetry);
+
         this.servoController1 = hardwareMap.servoController.get("Servo Controller 0");
         this.servoController2 = hardwareMap.servoController.get("Servo Controller 1");
 
